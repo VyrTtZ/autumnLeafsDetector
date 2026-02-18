@@ -22,6 +22,7 @@ public class ViewController {
     @FXML
     VBox optionsBox;
     public static File file;
+    private static int searchState = 0;
     @FXML
     public void initialize() throws FileNotFoundException {
         System.out.println("we r here");
@@ -73,6 +74,10 @@ public class ViewController {
         tempImageView.setFitWidth(pane.getMaxWidth());
         pane.getChildren().add(tempImageView);
         pane2.getChildren().add(new Label("Smart Finder"));
+        pane2.setOnMousePressed(_ ->{
+            searchState = 1;
+            pane2.setStyle("-fx-background-color: gray;");
+        });
 
         optionsBox.getChildren().add(pane);
         optionsBox.getChildren().add((pane2));
