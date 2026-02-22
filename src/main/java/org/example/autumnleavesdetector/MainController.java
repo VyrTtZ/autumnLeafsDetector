@@ -9,6 +9,7 @@ import javafx.scene.input.DragEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.stage.FileChooser;
+import learning.DataCleaner;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -50,6 +51,7 @@ public class MainController {
             File selectedFile = fileChooser.showOpenDialog(MainApp.stage);
             if (selectedFile != null) {
                 System.out.println("found");
+
                 ViewController.file = selectedFile;
                 try {
                     MainApp.loadViewView(MainApp.stage);

@@ -10,6 +10,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
+import learning.DataCleaner;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -34,6 +35,7 @@ public class ViewController {
             imgView.setFitHeight(imgViewPane.getPrefHeight());
             imgViewPane.getChildren().clear();
             imgViewPane.getChildren().add(imgView);
+            DataCleaner.objectSeparator(file);
 
             scanning();
 
@@ -58,8 +60,10 @@ public class ViewController {
         Canvas canvas = new Canvas();
         canvas.setHeight(pane.getHeight());
         canvas.setWidth(pane.getWidth());
-        canvas.setOnDragDetected(e ->{
-            canvas.getGraphicsContext2D().arc(e.getX(), e.getY(), 1, 1, 0, 1);
+        canvas.setOnMousePressed(e ->{
+            System.out.println("x: " + e.getX());
+            canvas.getGraphicsContext2D().beginPath();
+            canvas.getGraphicsContext2D().stroke();
         });
 
         pane.getChildren().add(canvas);
