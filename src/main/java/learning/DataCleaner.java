@@ -6,7 +6,6 @@ import mylinkedlist.MyLinkedList;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.util.Objects;
 
 
 public class DataCleaner {
@@ -53,7 +52,7 @@ public class DataCleaner {
 
 
         int height = (int)image.getHeight();
-        MyLinkedList mLinkedList = new MyLinkedList();
+        MyLinkedList<int[]> mLinkedList = new MyLinkedList();
         int[][] imageVals = new int[height][width];
 
         int[] pixels = new int[(int)image.getWidth() * (int)image.getHeight()];
@@ -98,13 +97,7 @@ public class DataCleaner {
             }
         }
 
-        for(int i = 0; i < imageVals.length; i++){
-            for(int j =0; j<imageVals[i].length; j++){
-                System.out.print(blurred[i][j] + " ------");
-            }
-        }
-
-
+        System.out.println("done1");
         for (int y = 1; y < height - 1; y++) {
             for (int x = 1; x < width - 1; x++) {
                 int sumHorizontal = 0;
@@ -112,28 +105,38 @@ public class DataCleaner {
                 for (int ky = -1; ky <= 1; ky++) {
                     for (int kx = -1; kx <= 1; kx++) {
                         double pixelValue = blurred[y + ky][x + kx];
-                        double weight = sobelKernelX[ky + 1][kx + 1];
+                        double weightX = sobelKernelX[ky + 1][kx + 1];
+                        double weightY = sobelKernelY[ky + 1][kx + 1];
 
-                        sumHorizontal += pixelValue * weight;
+                        sumVertical += pixelValue * weightY;
+
+                        sumHorizontal += pixelValue * weightX;
                     }
                 }
 
-                for (int ky = -1; ky <= 1; ky++) {
-                    for (int kx = -1; kx <= 1; kx++) {
-                        double pixelValue = blurred[y + ky][x + kx];
-                        double weight = sobelKernelY[ky + 1][kx + 1];
 
-                        sumVertical += pixelValue * weight;
-                    }
-                }
+                int magnitude = (sumHorizontal*sumHorizontal) + (sumVertical*sumVertical);
 
-                int magnitude = (int)Math.sqrt(Math.pow(sumHorizontal, 2) + Math.pow(sumVertical, 2));
-
-                if(magnitude > 35) mLinkedList.add(new int[]{y, x});
+                if(magnitude > 35*35) mLinkedList.add(new int[]{y, x});
             }
         }
 
-        System.out.println(mLinkedList.size());
+        for(int i = 0; i < mLinkedList.size(); i++){
+                for(int k = 5; k <10; k++){
+                    int[] temp = mLinkedList.get(i);
+                    for(int j =0; j < mLinkedList.size(); j++){
+                        int[] temp2 = mLinkedList.get(i);
+                        if(temp[0]+k == temp2[0]) System.out.println("Sean");
+                        if(temp[1]+k == temp2[1]) System.out.println("Jeffrey");
+                        if(temp[0]-k == temp2[0]) System.out.println("Diddy");
+                        if(temp[1]-k == temp2[1]) System.out.println("Epstein");
+                }
+            }
+        }
+
+        System.out.println("done2");
+
+        //System.out.println(mLinkedList.size());
 
 
 

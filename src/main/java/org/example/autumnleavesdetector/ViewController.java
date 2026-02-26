@@ -35,6 +35,7 @@ public class ViewController {
             imgView.setFitHeight(imgViewPane.getPrefHeight());
             imgViewPane.getChildren().clear();
             imgViewPane.getChildren().add(imgView);
+
             DataCleaner.objectSeparator(file);
 
             scanning();

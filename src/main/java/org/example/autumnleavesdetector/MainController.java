@@ -9,7 +9,6 @@ import javafx.scene.input.DragEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.stage.FileChooser;
-import learning.DataCleaner;
 
 import java.io.File;
 import java.io.FileInputStream;
