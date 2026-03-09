@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.canvas.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/11.0.14-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.autumnleavesdetector.ViewController">
+<AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.autumnleavesdetector.ViewController">
    <children>
       <HBox prefHeight="56.0" prefWidth="600.0">
          <children>
@@ -21,7 +22,10 @@
                </children></Pane>
          </children>
       </HBox>
-      <VBox fx:id="optionsBox" layoutX="370.0" layoutY="56.0" prefHeight="343.0" prefWidth="230.0" />
+      <VBox fx:id="optionsBox" layoutX="370.0" layoutY="56.0" prefHeight="343.0" prefWidth="230.0">
+         <children>
+            <Canvas fx:id="canvasColorFinder" height="202.0" width="231.0" />
+         </children></VBox>
       <Pane fx:id="imgViewPane" layoutX="8.0" layoutY="82.0" maxHeight="274.0" maxWidth="346.0" prefHeight="252.0" prefWidth="346.0" />
    </children>
 </AnchorPane>

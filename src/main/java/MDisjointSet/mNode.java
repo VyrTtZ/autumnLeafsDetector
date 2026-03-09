@@ -1,7 +1,5 @@
 package MDisjointSet;
 
-import mylinkedlist.MyLinkedList;
-
 public class mNode<T> {
     T data;
     mNode<T> parent;
