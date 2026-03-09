@@ -1,5 +1,6 @@
 package org.example.autumnleavesdetector;
 
+import MDisjointSet.DisjointSet;
 import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -21,6 +22,8 @@ import java.awt.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
+import java.util.LinkedList;
 
 public class ViewController {
 
@@ -84,32 +87,57 @@ public class ViewController {
         pane2.setMaxHeight(100);
 
         GraphicsContext graphicsContext = canvasColorFinder.getGraphicsContext2D();
+        DisjointSet<int[]> lassoPixels = new DisjointSet<>();
+        LinkedList<int[]> temp = new LinkedList<>();
+
         Image img = new Image(new FileInputStream("src/main/resources/org.example.images/colorWheel.png"));
         graphicsContext.drawImage(img, 0, 0, canvasColorFinder.getWidth(), canvasColorFinder.getHeight());
-        double[] lastX = new double[1];
-        double[] lastY = new double[1];
+        int[] lastX = new int[1];
+        int[] lastY = new int[1];
 
-        canvasColorFinder.setOnMousePressed(e ->{
-            lastX[0] = e.getX();
-            lastY[0] = e.getY();
-        });
 
         canvasColorFinder.setOnMousePressed(e -> {
             if (e.getButton() == MouseButton.SECONDARY) {
                 graphicsContext.clearRect(0, 0, canvasColorFinder.getWidth(), canvasColorFinder.getHeight());
                 graphicsContext.drawImage(img , 0, 0, canvasColorFinder.getWidth(), canvasColorFinder.getHeight());
-                lastX[0] = .0;
-                lastY[0] = .0;
+                lastX[0] = 0;
+                lastY[0] = 0;
+            }
+            else{
+                temp.clear();
+                lastX[0] = (int)e.getX();
+                lastY[0] = (int)e.getY();
+
             }
         });
 
         canvasColorFinder.setOnMouseDragged(e ->{
+            double alpha = 0.1;
+            double X = alpha * e.getX() + (1 - alpha) * lastX[0];
+            double Y = alpha * e.getY() + (1 - alpha) * lastY[0];
+            lassoPixels.makeSet(new int[]{(int)e.getX(), (int)e.getY()});
+            temp.add(new int[]{(int)e.getX(), (int)e.getY()});
+            for(int[] i : temp)
+                System.out.println(i[0]);
+
             graphicsContext.setStroke(Color.BLACK);
-            graphicsContext.setLineWidth(3);
-            graphicsContext.strokeLine(lastX[0], lastY[0], e.getX(), e.getY());
-            lastX[0] = e.getX();
-            lastY[0] = e.getY();
+            graphicsContext.setLineWidth(2);
+            graphicsContext.strokeLine(lastX[0], lastY[0], X, Y);
+            lastX[0] = (int)e.getX();
+            lastY[0] = (int)e.getY();
         });
+
+
+
+        canvasColorFinder.setOnMouseReleased(e->{
+            int[] startCooreds = temp.getFirst();
+            graphicsContext.setStroke(Color.BLACK);
+            graphicsContext.setLineWidth(2);
+            graphicsContext.strokeLine(e.getX(), e.getY(), startCooreds[0], startCooreds[1]);
+        });
+
+
+
         pane2.getChildren().add(new Label("Smart Finder"));
         pane2.setOnMousePressed(_ ->{
             searchState = 1;
