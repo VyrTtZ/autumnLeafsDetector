@@ -2,13 +2,11 @@ package MDisjointSet;
 
 public class DisjointSet<T> {
 
-    // Create a new set with the given element
     public mNode<T> makeSet(T data) {
-        return new mNode<>(data);  // Each node is its own parent (root of a tree)
+        return new mNode<>(data);
     }
 
     public mNode<T> find(mNode<T> node) {
-        //Path compression
         if (node != node.getParent()) {
             node.setParent(find(node.getParent()));
         }
