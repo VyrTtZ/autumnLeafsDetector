@@ -96,6 +96,8 @@ public class ViewController {
             LinkedList<int[]> temp = new LinkedList<>();
 
             Image img = new Image(new FileInputStream("src/main/resources/org.example.images/colorWheel.png"));
+
+
             mNode<int[]>[] pixelsColorChooser = new mNode[(int)img.getWidth()*(int)img.getHeight()];
             DisjointSet<int[]> ds = new DisjointSet<>();
 
@@ -104,6 +106,9 @@ public class ViewController {
                     pixelsColorChooser[i*(int)img.getWidth()+j] = ds.makeSet(new int[]{i, j});
                 }
             }
+
+
+
 
 
             PixelReader reader2 = img.getPixelReader();
@@ -150,24 +155,37 @@ public class ViewController {
                 graphicsContext.setStroke(Color.BLACK);
                 graphicsContext.setLineWidth(2);
                 graphicsContext.strokeLine(e.getX(), e.getY(), startCoords[0], startCoords[1]);
+                int maxLassoY = 0;
+                int minLassoY = 9999999;
+                for (int[] ints : temp) {
+                    if (ints[1] > maxLassoY) maxLassoY = ints[1];
+                    if (ints[1] < minLassoY) minLassoY = ints[1];
+                }
+
+                System.out.println("ts frying me"  + maxLassoY + " gromp " + minLassoY);
 
                 boolean blag;
                 for(int[] t : temp){
-                    for(int i = 1; i <img.getWidth(); i++){
+                    for(int i = 1; i < maxLassoY-1; i++){
                         blag = false;
-                        for(int j = 1; j < img.getHeight(); j++){
+                        for(int j = 1; j < img.getWidth(); j++){
                             if (t[0] == i && t[1] == j)
                                 blag = !blag;
                             if (blag) {
-                                ds.union(pixelsColorChooser[(i+1) * (int)img.getWidth() + j], pixelsColorChooser[i*(int)img.getWidth()+j]);
+                                ds.union(pixelsColorChooser[(i+1) * (int)img.getHeight() + j], pixelsColorChooser[i*(int)img.getHeight()+j]);
 
 
-                                System.out.println("oink");
+                                //System.out.println("oink");
+
                             }
                             reader2.getArgb(i, j);
                         }
                         }
                     }
+
+//                for(int i=0; i < pixelsColorChooser.length; i++){
+//                    System.out.print(ds.find(pixelsColorChooser[i])==pixelsColorChooser[i]?" t" + " " + ((i + 1)%img.getWidth()==0?"\n": " " ));
+//                }
                 Stage sNew = new Stage();
 
 // Make the canvas the same size as your existing canvas

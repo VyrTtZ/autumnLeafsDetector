@@ -1,6 +1,3 @@
 package learning;
 
-public class SVM {
-
-
-}
+public class SVM {}
