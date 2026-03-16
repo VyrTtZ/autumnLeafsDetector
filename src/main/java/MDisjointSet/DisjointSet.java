@@ -28,4 +28,11 @@ public class DisjointSet<T> {
             root1.setRank(root1.getRank() + 1);
         }
     }
+    public int orphanage(mNode<T> root, mNode<T>[] a){
+        int counter = 0;
+        for(mNode<T> orphan : a){
+            if(find(orphan) == root) counter ++;
+        }
+        return counter;
+    }
 }
