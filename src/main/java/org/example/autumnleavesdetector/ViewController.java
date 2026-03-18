@@ -13,6 +13,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import mylinkedlist.MyLinkedList;
 
 import java.io.*;
 import java.util.*;
@@ -23,7 +24,7 @@ public class ViewController {
     // FXML
     //------------------------------------------------------------------------
 
-    @FXML Pane scanOption, colorModeOption, imgViewPane;
+    @FXML Pane scanOption, colorModeOption, imgViewPane, pathOption;
     @FXML VBox optionsBox;
     @FXML Canvas canvasColorFinder;
 
@@ -54,11 +55,8 @@ public class ViewController {
     private int lassoX, lassoY;
     private final List<int[]> lassoPoints = new LinkedList<>();
     private boolean scanOptionOpen = false;
+    private boolean pathOptions = false;
     private int disjointSetIdentificationSize = 0;
-
-    //------------------------------------------------------------------------
-    // Init
-    //------------------------------------------------------------------------
 
     @FXML
     public void initialize() throws FileNotFoundException {
@@ -81,10 +79,6 @@ public class ViewController {
         scanOption.setOnMousePressed(e      -> openScanOptions());
         colorModeOption.setOnMousePressed(e -> openColorOptions());
     }
-
-    //------------------------------------------------------------------------
-    // Scan Panel
-    //------------------------------------------------------------------------
 
     private void openScanOptions() {
         if (scanOptionOpen) return;
@@ -110,11 +104,6 @@ public class ViewController {
                 t -> { if (t.getCode() == KeyCode.ENTER) System.out.println("searching"); }
         );
     }
-
-    //------------------------------------------------------------------------
-    // Color Panel
-    //------------------------------------------------------------------------
-
     private void openColorOptions() {
         if (matchedRoots == null || matchedRoots.isEmpty()) return;
         optionsBox.getChildren().clear();
@@ -130,11 +119,11 @@ public class ViewController {
 
         optionsBox.getChildren().addAll(bw, random, emerald);
     }
-
-    //------------------------------------------------------------------------
-    // Lasso Events
-    //------------------------------------------------------------------------
-
+    private void openPathOptions(){
+        if(!pathOptions){
+            //starting node for the finding algorithm ts pmo
+        }
+    }
     private void onLassoPressed(MouseEvent e) {
         if (e.getButton() == MouseButton.PRIMARY) {
             lassoPoints.clear();
@@ -195,9 +184,6 @@ public class ViewController {
         buildComponents(minHue, maxHue);
     }
 
-    //------------------------------------------------------------------------
-    // Component Detection
-    //------------------------------------------------------------------------
 
     private void buildComponents(double minHue, double maxHue) {
         resetImage();
@@ -389,5 +375,35 @@ public class ViewController {
         if (gradient != null) p.setStyle("-fx-background-color: " + gradient + ";");
         if (label    != null) p.getChildren().add(label);
         return p;
+    }
+
+    private void TSP(mNode<int[]> a){
+        MyLinkedList<mNode<int[]>>temp = new MyLinkedList<>();
+        mNode<int[]> currentVertex = null;
+        temp.add(findPath(a, matchedRoots.keySet()));
+        for(mNode<int[]> s : temp){
+            System.out.println(s);
+        }
+    }
+    private mNode<int[]> findPath(mNode<int[]> start, Set<mNode<int[]>> rootSet){
+        mNode<int[]> res = null;
+        int dist = 99999999;
+        int tempDist = 0;
+        Set <mNode<int[]>> visited = rootSet;
+        if(visited.isEmpty())
+            return res;
+        else {
+            for (mNode<int[]> j : rootSet) {
+                if (ds.find(start) == j) continue;
+                else {
+                    tempDist = (int) Math.sqrt((Math.pow(j.getData()[0] - start.getData()[0], 2) + Math.pow(j.getData()[1] - start.getData()[1], 2)));
+                    if (tempDist < dist) {
+                        res = j;
+                        visited.remove(res);
+                        dist = tempDist;
+                    }
+                }
+            }
+        }
     }
 }
