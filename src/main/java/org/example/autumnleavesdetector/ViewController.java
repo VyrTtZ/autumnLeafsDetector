@@ -54,6 +54,7 @@ public class ViewController {
     private int lassoX, lassoY;
     private final List<int[]> lassoPoints = new LinkedList<>();
     private boolean scanOptionOpen = false;
+    private int disjointSetIdentificationSize = 0;
 
     //------------------------------------------------------------------------
     // Init
@@ -221,8 +222,11 @@ public class ViewController {
         matchedRoots = new HashMap<>();
         for (int row = 0; row < h(); row++)
             for (int col = 0; col < w(); col++)
-                if (hueInRange(reader.getColor(col, row), minHue, maxHue))
+                if (hueInRange(reader.getColor(col, row), minHue, maxHue) ){
                     matchedRoots.put(localDs.find(localDJSet[idx(row, col)]), true);
+                    disjointSetIdentificationSize++;
+                    System.out.println(" ------ : " + disjointSetIdentificationSize);
+                }
 
         drawBoundingBoxes(localDs);
     }
@@ -270,6 +274,25 @@ public class ViewController {
 
     private void drawBox(int c0, int r0, int c1, int r1) {
         PixelWriter pw = writableImage.getPixelWriter();
+        int size = c1-c0;
+        int size2 = r1-r0;
+        int djCounter = 0;
+        for(mNode<int[]> k : localDJSet){
+            int px = k.getData()[0];
+            int py = k.getData()[1];
+            if(px >= c0 && px <= c1 && py >= r0 && py <= r1 && ds.find(k) != k) djCounter++;
+        }
+
+        System.out.println("size --  : " + size + " blehh " + size2);
+        String str = Integer.toString(djCounter);
+        Label l = new Label(str);
+        imgViewPane.getChildren().add(l);
+        l.toFront();
+        l.setStyle("-fx-font-size: 12px; -fx-text-fill: #39FF14; -fx-font-weight: bold;");
+        double scaleX = imgViewPane.getBoundsInParent().getWidth() / image.getWidth();
+        double scaleY = imgViewPane.getBoundsInParent().getHeight() / image.getHeight();
+
+        l.relocate((double)(c0 + c1) / 2 * scaleX, (double)(r0 + r1) / 2 * scaleY);
         for (int c = c0; c <= c1; c++) { pw.setColor(c, r0, Color.BLACK); pw.setColor(c, r1, Color.BLACK); }
         for (int r = r0; r <= r1; r++) { pw.setColor(c0, r, Color.BLACK); pw.setColor(c1, r, Color.BLACK); }
     }
@@ -297,6 +320,20 @@ public class ViewController {
         Map<mNode<int[]>, Color> map = new HashMap<>();
         matchedRoots.keySet().forEach(r -> map.put(r, Color.BLACK));
         recolorPixels(map);
+//        imgViewPane.setOnMouseMoved(e -> { DOESNT WORK FOR NOW, HIGHLIGHT THE CLUSTER THAT MOUSE HOVERS OVER
+//            int curX = (int) e.getX();
+//            int curY = (int) e.getY();
+//            System.out.println("x: " + curX + " y: " + curY);
+//            // find which cluster the hovered pixel belongs to
+//            mNode<int[]> hoveredCluster = ds.find(localDJSet[idx(curY, curX)]); // or however you get the node at a pixel
+//
+//            for(mNode<int[]> node : matchedRoots.keySet()){
+//                if(ds.find(node) == hoveredCluster){
+//                    System.out.println("GRAPEEEE");
+//                    writableImage.getPixelWriter().setColor(node.getData()[0], node.getData()[1], Color.CYAN);
+//                }
+//            }
+//        });
     }
 
     private void randomColorRecolor() {
