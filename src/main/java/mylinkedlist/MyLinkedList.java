@@ -67,6 +67,15 @@ public class MyLinkedList<T> implements Iterable<T> {
 
         return (current != null) ? current.data : null;
     }
+    public void set(int i, T value) {
+        Node<T> current = head;
+        int j = 0;
+        while (current != null && j < i) {
+            current = current.next;
+            j++;
+        }
+        if (current != null) current.data = value;
+    }
     //----------------------------------------------------------------------------------------------------------------------
     @Override
     public Iterator<T> iterator() {

@@ -167,6 +167,13 @@ private void onLassoReleased(MouseEvent e) {
             }
         }
     }
+    int n = hues.size();
+    double[] arr = new double[n];
+    for (int i = 0; i < n; i++) arr[i] = hues.get(i);
+
+
+    System.out.println("test1");
+mergeSort(arr);
 
     //Gets the hue range taking the wrap of a color wheel into consideration
     double wrapGap = hues.get(0) + 360 - hues.get(hues.size() - 1);
@@ -178,6 +185,9 @@ private void onLassoReleased(MouseEvent e) {
 
     double minHue = gapIdx == -1 ? hues.get(0)            : hues.get(gapIdx + 1);
     double maxHue = gapIdx == -1 ? hues.get(hues.size()-1) : hues.get(0) + 360;
+
+    System.out.println("min Hue " + minHue);
+    System.out.println("max Hue " + maxHue);
 
         buildComponents(minHue, maxHue);
     }
@@ -203,6 +213,7 @@ private void onLassoReleased(MouseEvent e) {
                     localDs.union(localDJSet[idx(row, col)], localDJSet[idx(row + 1, col)]);
             }
         }
+        System.out.println("test");
         //make a hashmap for roots of the sets of pixles in range
         matchedRoots = new HashMap<>();
         for (int row = 0; row < h(); row++)
@@ -213,6 +224,7 @@ private void onLassoReleased(MouseEvent e) {
                 }
 
         drawBoundingBoxes(localDs); //Draw boxes around all the sets
+        System.out.println("test2");
     }
 
     //------------------------------------------------------------------------
@@ -241,26 +253,27 @@ private void onLassoReleased(MouseEvent e) {
         for(int[] i : bounds.values()){
             boxes.add(i);
         }
+        System.out.println(boxes.size());
         for (int i = boxes.size() - 1; i >= 0; i--) { //checks the size of each box to see if they are larger than 5 px if not, remove
             int[] b = boxes.get(i);
             if (b[2] - b[0] < 5 || b[3] - b[1] < 5)
                 boxes.remove(boxes.get(i));
         }
-        boolean merged = true;
-        while (merged) { // runs until there are no more boxes that overlap
-            merged = false;
-            for (int i = 0; i < boxes.size(); i++) { //loop therough evey box and compare it to following boxes
-                for (int j = i + 1; j < boxes.size(); j++) {
-                    if (overlaps(boxes.get(i), boxes.get(j))) {
-                        mergeBox(boxes.get(i), boxes.get(j));
-                        boxes.remove(boxes.get(j));
-                        merged = true;
-                        i = boxes.size(); // force outer loop to exit
-                        break;
-                    }
-                }
-            }
-        }
+//        boolean merged = true;
+//        while (merged) { // runs until there are no more boxes that overlap
+//            merged = false;
+//            for (int i = 0; i < boxes.size(); i++) { //loop therough evey box and compare it to following boxes
+//                for (int j = i + 1; j < boxes.size(); j++) {
+//                    if (overlaps(boxes.get(i), boxes.get(j))) {
+//                        mergeBox(boxes.get(i), boxes.get(j));
+//                        boxes.remove(boxes.get(j));
+//                        merged = true;
+//                        i = boxes.size(); // force outer loop to exit
+//                        break;
+//                    }
+//                }
+//            }
+//        }
 
         for(int[] i : boxes){
             drawBox(i[0], i[1], i[2], i[3]);
@@ -272,9 +285,6 @@ private void onLassoReleased(MouseEvent e) {
     private void drawBox(int c0, int r0, int c1, int r1) {
 
         PixelWriter pw = writableImage.getPixelWriter();
-
-        int size = c1-c0;
-        int size2 = r1-r0;
         int djCounter = 0;
 
         for(mNode<int[]> k : localDJSet){
@@ -390,5 +400,29 @@ private void onLassoReleased(MouseEvent e) {
         if (gradient != null) p.setStyle("-fx-background-color: " + gradient + ";");
         if (label    != null) p.getChildren().add(label);
         return p;
+    }
+    private double[] mergeSort(double[] arr) {
+        if (arr.length <= 1) return arr;
+
+        int mid = arr.length / 2;
+        double[] left  = new double[mid];
+        double[] right = new double[mid];
+        for(int i = 0; i < mid; i++) left[i] = arr[i];
+        for(int i = mid, r = 0; i < arr.length; i++, r++) right[r] = arr[i];
+
+        return merge(left, right);
+    }
+
+    private double[] merge(double[] left, double[] right) {
+        double[] result = new double[left.length + right.length];
+        int l = 0, r = 0, i = 0;
+
+        while (l < left.length && r < right.length)
+            result[i++] = left[l] <= right[r] ? left[l++] : right[r++];
+
+        while (l < left.length)  result[i++] = left[l++];
+        while (r < right.length) result[i++] = right[r++]; //check how this works
+
+        return result;
     }
 }
