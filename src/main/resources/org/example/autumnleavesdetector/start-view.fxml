@@ -4,18 +4,20 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<Pane xmlns="http://javafx.com/javafx/11.0.14-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.autumnleavesdetector.MainController">
+<Pane xmlns="http://javafx.com/javafx/11.0.14-internal"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="org.example.autumnleavesdetector.MainController"
+      prefWidth="${MainApp.width}"
+      prefHeight="${MainApp.height}">
    <children>
-      <HBox id="mainHBox" layoutX="202.0" layoutY="150.0">
-         <children>
-            <Pane id="newProjectPane" fx:id="newProjectPane" />
-            <Pane id="signOutPane" fx:id="signOutPane"/>
-         </children>
+      <Pane fx:id="newProjectPane" />
+      <Pane fx:id="signOutPane" />
+      <HBox fx:id="titleHBox" alignment="CENTER">
+         <Label fx:id="mainTitleLabel" text="Welcome to Leaf Finder">
+            <font>
+               <Font name="Arial" size="34.0" />
+            </font>
+         </Label>
       </HBox>
-      <Label id="mainTitleLabel" layoutX="84.0" layoutY="50.0" text=" Welcome to leaf finder">
-         <font>
-            <Font name="Algerian" size="34.0" />
-         </font>
-      </Label>
    </children>
 </Pane>

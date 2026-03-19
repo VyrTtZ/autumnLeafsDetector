@@ -1,12 +1,9 @@
 package org.example.autumnleavesdetector;
 
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.DragEvent;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.stage.FileChooser;
 
@@ -14,9 +11,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.EventListener;
 
 public class MainController {
+    @FXML
+    private HBox titleHBox;
     @FXML
     private Pane newProjectPane;
     @FXML
@@ -26,16 +24,24 @@ public class MainController {
     public void initialize() throws FileNotFoundException {
         setPaneBackgrounds();
     }
-    @FXML
-    protected void setPaneBackgrounds() throws FileNotFoundException {
-        ImageView imageAdd = new ImageView(new Image(new FileInputStream("src/main/resources/org.example.images/add.png")));
-        ImageView imageQuit = new ImageView(new Image(new FileInputStream("src/main/resources/org.example.images/sign-out.png")));
 
-        imageAdd.setFitWidth(newProjectPane.getPrefWidth());
-        imageQuit.setFitWidth(signOutPane.getPrefWidth());
+    private void setPaneBackgrounds() throws FileNotFoundException {
+        double paneSize = MainApp.height * 0.25;
 
-        imageAdd.setFitHeight(newProjectPane.getPrefHeight());
-        imageQuit.setFitHeight(newProjectPane.getPrefHeight());
+        newProjectPane.setPrefSize(paneSize, paneSize);
+        signOutPane.setPrefSize(paneSize, paneSize);
+        titleHBox.setPrefWidth(MainApp.width);
+
+        // Set up images
+        ImageView imageAdd = new ImageView(new Image(new FileInputStream(
+                "src/main/resources/org.example.images/add.png")));
+        ImageView imageQuit = new ImageView(new Image(new FileInputStream(
+                "src/main/resources/org.example.images/sign-out.png")));
+
+        imageAdd.setFitWidth(paneSize);
+        imageAdd.setFitHeight(paneSize);
+        imageQuit.setFitWidth(paneSize);
+        imageQuit.setFitHeight(paneSize);
 
         imageAdd.setPreserveRatio(true);
         imageQuit.setPreserveRatio(true);
@@ -43,14 +49,22 @@ public class MainController {
         newProjectPane.getChildren().add(imageAdd);
         signOutPane.getChildren().add(imageQuit);
 
+        newProjectPane.relocate(
+                (MainApp.width * 0.25) - (paneSize / 2),
+                (MainApp.height * 0.5) - (paneSize / 2)
+        );
+
+        signOutPane.relocate(
+                (MainApp.width * 0.75) - (paneSize / 2),
+                (MainApp.height * 0.5) - (paneSize / 2)
+        );
+
         newProjectPane.setOnMousePressed(e -> {
             FileChooser fileChooser = new FileChooser();
-            fileChooser.getExtensionFilters().addAll(
+            fileChooser.getExtensionFilters().add(
                     new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.gif"));
             File selectedFile = fileChooser.showOpenDialog(MainApp.stage);
             if (selectedFile != null) {
-                System.out.println("found");
-
                 ViewController.file = selectedFile;
                 try {
                     MainApp.loadViewView(MainApp.stage);
@@ -58,7 +72,6 @@ public class MainController {
                     throw new RuntimeException(ex);
                 }
             }
-
         });
     }
 }

@@ -19,18 +19,9 @@ import java.io.*;
 import java.util.*;
 
 public class ViewController {
-
-    //------------------------------------------------------------------------
-    // FXML
-    //------------------------------------------------------------------------
-
     @FXML Pane scanOption, colorModeOption, imgViewPane, pathOption;
     @FXML VBox optionsBox;
     @FXML Canvas canvasColorFinder;
-
-    //------------------------------------------------------------------------
-    // Image
-    //------------------------------------------------------------------------
 
     public static File file;
     private Image image;
@@ -38,17 +29,9 @@ public class ViewController {
     private PixelReader reader;
     private ImageView imgView;
 
-    //------------------------------------------------------------------------
-    // Disjoint Set
-    //------------------------------------------------------------------------
-
     private final DisjointSet<int[]> ds = new DisjointSet<>();
     private mNode<int[]>[] localDJSet;
     private HashMap<mNode<int[]>, Boolean> matchedRoots;
-
-    //------------------------------------------------------------------------
-    // Color Picker Lasso
-    //------------------------------------------------------------------------
 
     private Image imgColorPicker;
     private GraphicsContext gc;
@@ -61,70 +44,79 @@ public class ViewController {
     @FXML
     public void initialize() throws FileNotFoundException {
         if (file == null) return;
-        System.out.println((double) MainApp.width/3);
+//---------------------------------------------------------Nav Bar
         scanOption.setPrefSize((double) MainApp.width / 3, (double) MainApp.height / 10);
-        scanOption.setStyle("linear-gradient(to right, black, white)");
         colorModeOption.setPrefSize((double) MainApp.width / 3, (double) MainApp.height / 10);
-        scanOption.getChildren().add(new Label("testing"));
-
+        pathOption.setPrefSize((double) MainApp.width/3, (double) MainApp.height/10);
+//--------------------------------------------------------Image + image view
         image         = new Image(new FileInputStream(file));
         writableImage = new WritableImage(image.getPixelReader(), w(), h());
         reader        = image.getPixelReader();
 
-        imgView = new ImageView(writableImage);
-        imgView.setFitWidth(MainApp.width/2);
-        imgView.setFitHeight(MainApp.height);
-        imgViewPane.getChildren().setAll(imgView);
+        imgViewPane.setPrefSize(MainApp.width * 0.5, MainApp.height * 0.9);
 
+        imgView = new ImageView(writableImage);
+        imgView.setPreserveRatio(true);
+        imgView.setFitWidth(MainApp.width * 0.45);
+        imgView.setFitHeight(MainApp.height * 0.85);
+        imgView.setX(MainApp.width * 0.025);
+        imgView.setY(MainApp.height * 0.025);
+        imgViewPane.getChildren().add(imgView);
+
+//-------------------------------------------------------Interaction with navbar
         scanOption.setOnMousePressed(e      -> openScanOptions());
         colorModeOption.setOnMousePressed(e -> openColorOptions());
+        pathOption.setOnMousePressed(e -> openPathOptions());
     }
-
+//-------------------------------------------------------------------------------------------------------------------------
     private void openScanOptions() {
+
         if (scanOptionOpen) return;
+
         scanOptionOpen = true;
         optionsBox.setSpacing(3);
-
+//----------------------------------------------------------------Setting up the color wheel
         try { imgColorPicker = new Image(new FileInputStream("src/main/resources/org.example.images/colorWheel.png")); }
         catch (FileNotFoundException ex) { throw new RuntimeException(ex); }
-
+//----------------------------------------------------------------Set up for the color wheel lasso
         gc = canvasColorFinder.getGraphicsContext2D();
         gc.drawImage(imgColorPicker, 0, 0, canvasColorFinder.getWidth(), canvasColorFinder.getHeight());
-
         canvasColorFinder.setOnMousePressed(this::onLassoPressed);
         canvasColorFinder.setOnMouseDragged(this::onLassoDragged);
         canvasColorFinder.setOnMouseReleased(this::onLassoReleased);
-
+//----------------------------------------------------------------Smart search
         Pane smartBtn = makePane(200, 100, null, new Label("Smart Finder"));
         smartBtn.setOnMousePressed(_ -> smartBtn.setStyle("-fx-background-color: gray;"));
         optionsBox.getChildren().addAll(new Pane(), smartBtn);
 
-        MainApp.stage.getScene().addEventHandler(
-                javafx.scene.input.KeyEvent.KEY_RELEASED,
-                t -> { if (t.getCode() == KeyCode.ENTER) System.out.println("searching"); }
-        );
     }
+//-------------------------------------------------------------------------------------------------------------------------
     private void openColorOptions() {
+//---------------------------------------------------------Only allow top open if scan has been done
         if (matchedRoots == null || matchedRoots.isEmpty()) return;
+//---------------------------------------------------------Add the panes as buttons for options
         optionsBox.getChildren().clear();
         optionsBox.setSpacing(3);
 
-        Pane bw      = makePane(200, 100, "linear-gradient(to right, black, white)", null);
-        Pane random  = makePane(200, 100, "linear-gradient(to right, red, orange, yellow, green, blue, purple)", null);
-        Pane emerald = makePane(200, 100, "linear-gradient(to right, darkgreen, lightgreen)", null);
+        Pane greyscaleOption      = makePane(200, 100, "linear-gradient(to right, black, white)", null);
+        Pane randomColorsOption  = makePane(200, 100, "linear-gradient(to right, red, orange, yellow, green, blue, purple)", null);
+        Pane greenSizeScaleOption = makePane(200, 100, "linear-gradient(to right, darkgreen, lightgreen)", null);
+//---------------------------------------------------------Interaction with option panes
+        greyscaleOption.setOnMouseClicked(_      -> blackAndWhiteRecolor());
+        randomColorsOption.setOnMouseClicked(_  -> randomColorRecolor());
+        greenSizeScaleOption.setOnMouseClicked(_ -> emeraldGradientRecolor());
 
-        bw.setOnMouseClicked(_      -> blackAndWhiteRecolor());
-        random.setOnMouseClicked(_  -> randomColorRecolor());
-        emerald.setOnMouseClicked(_ -> emeraldGradientRecolor());
-
-        optionsBox.getChildren().addAll(bw, random, emerald);
+        optionsBox.getChildren().addAll(greyscaleOption, randomColorsOption, greenSizeScaleOption);
     }
+//-------------------------------------------------------------------------------------------------------------------------
     private void openPathOptions(){
         if(!pathOptions){
             //starting node for the finding algorithm ts pmo
         }
     }
+//-------------------------------------------------------------------------------------------------------------------------
     private void onLassoPressed(MouseEvent e) {
+//-----------------------------------------------------Sets up the lasso
         if (e.getButton() == MouseButton.PRIMARY) {
             lassoPoints.clear();
             lassoPoints.add(new int[]{(int) e.getX(), (int) e.getY()});
@@ -136,7 +128,7 @@ public class ViewController {
             lassoX = lassoY = 0;
         }
     }
-
+//-------------------------------------------------------------------------------------------------------------------------
     private void onLassoDragged(MouseEvent e) {
         gc.setStroke(Color.BLACK);
         gc.setLineWidth(1);
@@ -145,45 +137,51 @@ public class ViewController {
         lassoY = (int) e.getY();
         lassoPoints.add(new int[]{lassoX, lassoY});
     }
+//-------------------------------------------------------------------------------------------------------------------------
+private void onLassoReleased(MouseEvent e) {
+    int colorFinderWidth  = (int) canvasColorFinder.getWidth();
+    int colorFinderHeight = (int) canvasColorFinder.getHeight();
 
-    private void onLassoReleased(MouseEvent e) {
-        int cw = (int) canvasColorFinder.getWidth(), ch = (int) canvasColorFinder.getHeight();
-        boolean[][] grid = new boolean[ch][cw];
-        for (int[] p : lassoPoints)
-            if (p[0] >= 0 && p[0] < cw && p[1] >= 0 && p[1] < ch)
-                grid[p[1]][p[0]] = true;
+    // Ratios to map canvas coords → image coords
+    double sx = imgColorPicker.getWidth()  / colorFinderWidth;
+    double sy = imgColorPicker.getHeight() / colorFinderHeight;
 
-        double sx = imgColorPicker.getWidth() / canvasColorFinder.getWidth();
-        double sy = imgColorPicker.getHeight() / canvasColorFinder.getHeight();
-        PixelReader pr = imgColorPicker.getPixelReader();
+    // Read the lasso strokes from the canvas
+    WritableImage canvasSnapshot = new WritableImage(colorFinderWidth, colorFinderHeight);
+    canvasColorFinder.snapshot(null, canvasSnapshot);
+    PixelReader lassoReader = canvasSnapshot.getPixelReader();
 
-        List<Double> hues = new ArrayList<>();
-        for (int row = 0; row < ch; row++) {
-            int first = -1, last = -1;
-            for (int col = 0; col < cw; col++)
-                if (grid[row][col]) { if (first == -1) first = col; last = col; }
-            if (first == -1) continue;
-            for (int col = first; col <= last; col++) {
-                Color c = pr.getColor(Math.min((int)(col * sx), (int) imgColorPicker.getWidth() - 1),
-                        Math.min((int)(row * sy), (int) imgColorPicker.getHeight() - 1));
-                if (c.getSaturation() > 0.2) hues.add(c.getHue());
+    // Read the actual colours from the image underneath
+    PixelReader imageReader = imgColorPicker.getPixelReader();
+
+    MyLinkedList<Double> hues = new MyLinkedList<>();
+    for (int row = 0; row < colorFinderHeight; row++) {
+        boolean saving = false;
+        for (int col = 0; col < colorFinderWidth; col++) {
+            Color lasso = lassoReader.getColor(col, row);
+            if (lasso.getBrightness() < 0.3) {
+                saving = !saving; //Toggle the saving of hue after a black pixel
+            } else if (saving) {
+                Color img = imageReader.getColor((int)(col*sx), (int)(col*sy));
+                hues.add(img.getHue());
             }
         }
-        if (hues.isEmpty()) return;
+    }
 
-        Collections.sort(hues);
-        double bigGap = 0; int gapIdx = 0;
-        for (int i = 0; i < hues.size() - 1; i++) {
-            double g = hues.get(i + 1) - hues.get(i);
-            if (g > bigGap) { bigGap = g; gapIdx = i; }
-        }
-        double wrapGap = hues.get(0) + 360 - hues.get(hues.size() - 1);
-        double minHue  = wrapGap > bigGap ? hues.get(0)             : hues.get(gapIdx + 1);
-        double maxHue  = wrapGap > bigGap ? hues.get(hues.size()-1) : hues.get(0) + 360;
+    //Gets the hue range taking the wrap of a color wheel into consideration
+    double wrapGap = hues.get(0) + 360 - hues.get(hues.size() - 1);
+    int gapIdx = -1;
+
+    for (int i = 0; i < hues.size() - 1; i++)
+        if (hues.get(i + 1) - hues.get(i) > wrapGap)
+        { wrapGap = hues.get(i + 1) - hues.get(i); gapIdx = i; }
+
+    double minHue = gapIdx == -1 ? hues.get(0)            : hues.get(gapIdx + 1);
+    double maxHue = gapIdx == -1 ? hues.get(hues.size()-1) : hues.get(0) + 360;
 
         buildComponents(minHue, maxHue);
     }
-
+//-------------------------------------------------------------------------------------------------------------------------
 
     private void buildComponents(double minHue, double maxHue) {
         resetImage();
@@ -375,35 +373,5 @@ public class ViewController {
         if (gradient != null) p.setStyle("-fx-background-color: " + gradient + ";");
         if (label    != null) p.getChildren().add(label);
         return p;
-    }
-
-    private void TSP(mNode<int[]> a){
-        MyLinkedList<mNode<int[]>>temp = new MyLinkedList<>();
-        mNode<int[]> currentVertex = null;
-        temp.add(findPath(a, matchedRoots.keySet()));
-        for(mNode<int[]> s : temp){
-            System.out.println(s);
-        }
-    }
-    private mNode<int[]> findPath(mNode<int[]> start, Set<mNode<int[]>> rootSet){
-        mNode<int[]> res = null;
-        int dist = 99999999;
-        int tempDist = 0;
-        Set <mNode<int[]>> visited = rootSet;
-        if(visited.isEmpty())
-            return res;
-        else {
-            for (mNode<int[]> j : rootSet) {
-                if (ds.find(start) == j) continue;
-                else {
-                    tempDist = (int) Math.sqrt((Math.pow(j.getData()[0] - start.getData()[0], 2) + Math.pow(j.getData()[1] - start.getData()[1], 2)));
-                    if (tempDist < dist) {
-                        res = j;
-                        visited.remove(res);
-                        dist = tempDist;
-                    }
-                }
-            }
-        }
     }
 }

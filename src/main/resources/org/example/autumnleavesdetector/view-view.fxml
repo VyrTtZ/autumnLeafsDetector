@@ -3,40 +3,76 @@
 <?import javafx.scene.canvas.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
 
-<AnchorPane xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.autumnleavesdetector.ViewController">
+<AnchorPane xmlns="http://javafx.com/javafx/17.0.2-ea"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="org.example.autumnleavesdetector.ViewController"
+            style="-fx-background-color: #1e1e2e;">
    <children>
-      <VBox>
-         <children>
-            <HBox>
-               <children>
-                  <Pane fx:id="scanOption">
-                     <children>
-                        <Label layoutX="88.0" layoutY="20.0" text="Scan" />
-                     </children></Pane>
-                  <Pane fx:id="colorModeOption">
-                     <children>
-                        <Label layoutX="66.0" layoutY="20.0" text="Color Modes" />
-                     </children></Pane>
-                  <Pane fx:id="pathOption">
-                     <children>
-                        <Label layoutX="66.0" layoutY="20.0" text="Pathfinding" />
-                     </children></Pane>
-               </children>
-            </HBox>
-            <HBox>
-               <children>
-                  <Pane fx:id="imgViewPane"/>
-                  <VBox fx:id="optionsBox" layoutX="370.0" layoutY="56.0">
-                     <children>
-                        <Canvas fx:id="canvasColorFinder" height="400.0" width="400" />
-                     </children></VBox>
+      <VBox AnchorPane.topAnchor="0" AnchorPane.bottomAnchor="0"
+            AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0">
 
+         <!-- Nav Bar — widths set by controller to MainApp.width/3 each -->
+         <HBox fx:id="navBar" spacing="2" alignment="CENTER_LEFT"
+               style="-fx-background-color: #2a2a3e;">
+
+            <Pane fx:id="scanOption" style="-fx-cursor: hand;">
+               <children>
+                  <Label text="Scan" prefWidth="100" prefHeight="100"
+                         alignment="CENTER"
+                         style="-fx-text-fill: #cdd6f4; -fx-font-size: 14;
+                                -fx-font-weight: bold;"/>
                </children>
-            </HBox>
-         </children>
+            </Pane>
+
+            <Pane fx:id="colorModeOption" style="-fx-cursor: hand;">
+               <children>
+                  <Label text="Color Modes" prefWidth="100" prefHeight="100"
+                         alignment="CENTER"
+                         style="-fx-text-fill: #cdd6f4; -fx-font-size: 14;
+                                -fx-font-weight: bold;"/>
+               </children>
+            </Pane>
+
+            <Pane fx:id="pathOption" style="-fx-cursor: hand;">
+               <children>
+                  <Label text="Pathfinding" prefWidth="100" prefHeight="100"
+                         alignment="CENTER"
+                         style="-fx-text-fill: #cdd6f4; -fx-font-size: 14;
+                                -fx-font-weight: bold;"/>
+               </children>
+            </Pane>
+
+         </HBox>
+
+         <!-- Main content -->
+         <HBox VBox.vgrow="ALWAYS" spacing="16"
+               style="-fx-padding: 16; -fx-background-color: #1e1e2e;">
+
+            <!-- Image view panel — controller sets imgView to MainApp.width/2 -->
+            <Pane fx:id="imgViewPane" HBox.hgrow="ALWAYS"
+                  style="-fx-background-color: #2a2a3e;
+                         -fx-background-radius: 10;
+                         -fx-border-color: #45475a;
+                         -fx-border-radius: 10;
+                         -fx-border-width: 1;"/>
+
+            <!-- Options panel — children added dynamically by controller -->
+            <VBox fx:id="optionsBox" prefWidth="420"
+                  style="-fx-background-color: #2a2a3e;
+                         -fx-background-radius: 10;
+                         -fx-border-color: #45475a;
+                         -fx-border-radius: 10;
+                         -fx-border-width: 1;
+                         -fx-padding: 16;">
+               <children>
+                  <Canvas fx:id="canvasColorFinder"
+                          height="400.0" width="388"/>
+               </children>
+            </VBox>
+
+         </HBox>
       </VBox>
-
-
    </children>
 </AnchorPane>
