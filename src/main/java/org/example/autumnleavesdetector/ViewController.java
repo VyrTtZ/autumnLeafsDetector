@@ -186,15 +186,16 @@ private void onLassoReleased(MouseEvent e) {
     private void buildComponents(double minHue, double maxHue) {
         resetImage();
         DisjointSet<int[]> localDs = new DisjointSet<>();
-        localDJSet = new mNode[w() * h()];
+        localDJSet = new mNode[w() * h()]; //array to store the disjoint sets
+
 
         for (int row = 0; row < h(); row++)
             for (int col = 0; col < w(); col++)
-                localDJSet[idx(row, col)] = localDs.makeSet(new int[]{col, row});
+                localDJSet[idx(row, col)] = localDs.makeSet(new int[]{col, row}); //makes every node contain coordinate for every pixel
 
         for (int row = 0; row < h(); row++) {
             for (int col = 0; col < w(); col++) {
-                Color c = reader.getColor(col, row);
+                Color c = reader.getColor(col, row); //Read in every color for each pixle if its within the hue range the union it with pixles that have the same color to the right and below
                 if (!hueInRange(c, minHue, maxHue)) continue;
                 if (col + 1 < w() && hueInRange(reader.getColor(col + 1, row), minHue, maxHue))
                     localDs.union(localDJSet[idx(row, col)], localDJSet[idx(row, col + 1)]);
@@ -202,17 +203,16 @@ private void onLassoReleased(MouseEvent e) {
                     localDs.union(localDJSet[idx(row, col)], localDJSet[idx(row + 1, col)]);
             }
         }
-
+        //make a hashmap for roots of the sets of pixles in range
         matchedRoots = new HashMap<>();
         for (int row = 0; row < h(); row++)
             for (int col = 0; col < w(); col++)
-                if (hueInRange(reader.getColor(col, row), minHue, maxHue) ){
-                    matchedRoots.put(localDs.find(localDJSet[idx(row, col)]), true);
+                if (hueInRange(reader.getColor(col, row), minHue, maxHue) ){ //for every pixel in the color range add the
+                    matchedRoots.put(localDs.find(localDJSet[idx(row, col)]), true); // put found root in the hashmap
                     disjointSetIdentificationSize++;
-                    System.out.println(" ------ : " + disjointSetIdentificationSize);
                 }
 
-        drawBoundingBoxes(localDs);
+        drawBoundingBoxes(localDs); //Draw boxes around all the sets
     }
 
     //------------------------------------------------------------------------
@@ -220,54 +220,69 @@ private void onLassoReleased(MouseEvent e) {
     //------------------------------------------------------------------------
 
     private void drawBoundingBoxes(DisjointSet<int[]> localDs) {
-        Map<mNode<int[]>, int[]> bounds = new HashMap<>();
+        HashMap<mNode<int[]>, int[]> bounds = new HashMap<>();
         for (int row = 0; row < h(); row++) {
             for (int col = 0; col < w(); col++) {
-                mNode<int[]> root = localDs.find(localDJSet[idx(row, col)]);
-                if (!matchedRoots.containsKey(root)) continue;
+                mNode<int[]> root = localDs.find(localDJSet[idx(row, col)]); //find the root of every disjoint set (pixel)
+                if (!matchedRoots.containsKey(root)) continue; //if said root isnt in the root map, nothing done, otherwise compute the bounds
                 final int c = col, r = row;
-                bounds.compute(root, (k, b) -> {
-                    if (b == null) return new int[]{c, r, c, r};
+                if (!bounds.containsKey(root)) {
+                    bounds.put(root, new int[]{c, r, c, r});
+                } else {
+                    int[] b = bounds.get(root);
                     b[0] = Math.min(b[0], c); b[1] = Math.min(b[1], r);
                     b[2] = Math.max(b[2], c); b[3] = Math.max(b[3], r);
-                    return b;
-                });
+                }
             }
         }
 
         resetImage();
-        List<int[]> boxes = new ArrayList<>(bounds.values());
-        boxes.removeIf(b -> b[2] - b[0] < 5 || b[3] - b[1] < 5);
-
+        MyLinkedList<int[]> boxes = new MyLinkedList<>();
+        for(int[] i : bounds.values()){
+            boxes.add(i);
+        }
+        for (int i = boxes.size() - 1; i >= 0; i--) { //checks the size of each box to see if they are larger than 5 px if not, remove
+            int[] b = boxes.get(i);
+            if (b[2] - b[0] < 5 || b[3] - b[1] < 5)
+                boxes.remove(boxes.get(i));
+        }
         boolean merged = true;
-        while (merged) {
+        while (merged) { // runs until there are no more boxes that overlap
             merged = false;
-            outer:
-            for (int i = 0; i < boxes.size(); i++)
-                for (int j = i + 1; j < boxes.size(); j++)
+            for (int i = 0; i < boxes.size(); i++) { //loop therough evey box and compare it to following boxes
+                for (int j = i + 1; j < boxes.size(); j++) {
                     if (overlaps(boxes.get(i), boxes.get(j))) {
                         mergeBox(boxes.get(i), boxes.get(j));
-                        boxes.remove(j);
-                        merged = true; break outer;
+                        boxes.remove(boxes.get(j));
+                        merged = true;
+                        i = boxes.size(); // force outer loop to exit
+                        break;
                     }
+                }
+            }
         }
 
-        boxes.forEach(b -> drawBox(b[0], b[1], b[2], b[3]));
-        imgView.setImage(writableImage);
+        for(int[] i : boxes){
+            drawBox(i[0], i[1], i[2], i[3]);
+        }
+
+        imgView.setImage(writableImage); //update the image on the screen with the boxes
     }
 
     private void drawBox(int c0, int r0, int c1, int r1) {
+
         PixelWriter pw = writableImage.getPixelWriter();
+
         int size = c1-c0;
         int size2 = r1-r0;
         int djCounter = 0;
+
         for(mNode<int[]> k : localDJSet){
             int px = k.getData()[0];
             int py = k.getData()[1];
-            if(px >= c0 && px <= c1 && py >= r0 && py <= r1 && ds.find(k) != k) djCounter++;
+            if(px >= c0 && px <= c1 && py >= r0 && py <= r1 && ds.find(k) != k) djCounter++; // count the pixels with the same root within the box
         }
 
-        System.out.println("size --  : " + size + " blehh " + size2);
         String str = Integer.toString(djCounter);
         Label l = new Label(str);
         imgViewPane.getChildren().add(l);
@@ -275,13 +290,13 @@ private void onLassoReleased(MouseEvent e) {
         l.setStyle("-fx-font-size: 12px; -fx-text-fill: #39FF14; -fx-font-weight: bold;");
         double scaleX = imgViewPane.getBoundsInParent().getWidth() / image.getWidth();
         double scaleY = imgViewPane.getBoundsInParent().getHeight() / image.getHeight();
+        l.relocate((double)(c0 + c1) / 2 * scaleX, (double)(r0 + r1) / 2 * scaleY); //DISPLAY THE disjoint set size within the box
 
-        l.relocate((double)(c0 + c1) / 2 * scaleX, (double)(r0 + r1) / 2 * scaleY);
-        for (int c = c0; c <= c1; c++) { pw.setColor(c, r0, Color.BLACK); pw.setColor(c, r1, Color.BLACK); }
-        for (int r = r0; r <= r1; r++) { pw.setColor(c0, r, Color.BLACK); pw.setColor(c1, r, Color.BLACK); }
+        for (int c = c0; c <= c1; c++) { pw.setColor(c, r0, Color.NAVY); pw.setColor(c, r1, Color.NAVY); } //draw the columnts of the box
+        for (int r = r0; r <= r1; r++) { pw.setColor(c0, r, Color.NAVY); pw.setColor(c1, r, Color.NAVY); } //draw the rows of the box
     }
 
-    private void mergeBox(int[] a, int[] b) {
+    private void mergeBox(int[] a, int[] b) { //merges boxes into one
         a[0] = Math.min(a[0], b[0]); a[1] = Math.min(a[1], b[1]);
         a[2] = Math.max(a[2], b[2]); a[3] = Math.max(a[3], b[3]);
     }
@@ -290,7 +305,7 @@ private void onLassoReleased(MouseEvent e) {
     // Recolor
     //------------------------------------------------------------------------
 
-    private void recolorPixels(Map<mNode<int[]>, Color> colorMap) {
+    private void recolorPixels(Map<mNode<int[]>, Color> colorMap) { //main recolor method
         PixelWriter pw = writableImage.getPixelWriter();
         for (int row = 0; row < h(); row++)
             for (int col = 0; col < w(); col++) {
@@ -304,20 +319,26 @@ private void onLassoReleased(MouseEvent e) {
         Map<mNode<int[]>, Color> map = new HashMap<>();
         matchedRoots.keySet().forEach(r -> map.put(r, Color.BLACK));
         recolorPixels(map);
-//        imgViewPane.setOnMouseMoved(e -> { DOESNT WORK FOR NOW, HIGHLIGHT THE CLUSTER THAT MOUSE HOVERS OVER
-//            int curX = (int) e.getX();
-//            int curY = (int) e.getY();
-//            System.out.println("x: " + curX + " y: " + curY);
-//            // find which cluster the hovered pixel belongs to
-//            mNode<int[]> hoveredCluster = ds.find(localDJSet[idx(curY, curX)]); // or however you get the node at a pixel
-//
-//            for(mNode<int[]> node : matchedRoots.keySet()){
-//                if(ds.find(node) == hoveredCluster){
-//                    System.out.println("GRAPEEEE");
-//                    writableImage.getPixelWriter().setColor(node.getData()[0], node.getData()[1], Color.CYAN);
-//                }
-//            }
-//        });
+        imgViewPane.setOnMouseMoved(e -> {
+            double scaleX = image.getWidth()  / imgView.getFitWidth();
+            double scaleY = image.getHeight() / imgView.getFitHeight();
+            int curX = (int) (e.getX() * scaleX);
+            int curY = (int) (e.getY() * scaleY);
+
+            if (curX < 0 || curX >= w() || curY < 0 || curY >= h()) return;
+
+            mNode<int[]> hoveredCluster = ds.find(localDJSet[idx(curY, curX)]);
+
+            resetImage();
+            PixelWriter pw = writableImage.getPixelWriter();
+            for (int row = 0; row < h(); row++) {
+                for (int col = 0; col < w(); col++) {
+                    if (ds.find(localDJSet[idx(row, col)]) == hoveredCluster)
+                        pw.setColor(col, row, Color.CYAN);
+                }
+            }
+            imgView.setImage(writableImage);
+        });
     }
 
     private void randomColorRecolor() {
@@ -343,10 +364,6 @@ private void onLassoReleased(MouseEvent e) {
         recolorPixels(map);
     }
 
-    //------------------------------------------------------------------------
-    // Utilities
-    //------------------------------------------------------------------------
-
     private int w()               { return (int) image.getWidth(); }
     private int h()               { return (int) image.getHeight(); }
     private int idx(int r, int c) { return r * w() + c; }
@@ -363,11 +380,11 @@ private void onLassoReleased(MouseEvent e) {
         return hue >= minHue && hue <= maxHue;
     }
 
-    private boolean overlaps(int[] a, int[] b) {
+    private boolean overlaps(int[] a, int[] b) { //checks for the overlapping of the columns and rows whne creating boxes
         return a[0] <= b[2] && a[2] >= b[0] && a[1] <= b[3] && a[3] >= b[1];
     }
 
-    private Pane makePane(double w, double h, String gradient, Label label) {
+    private Pane makePane(double w, double h, String gradient, Label label) { //mapes panes for the navbar
         Pane p = new Pane();
         p.setPrefSize(w, h);
         if (gradient != null) p.setStyle("-fx-background-color: " + gradient + ";");
