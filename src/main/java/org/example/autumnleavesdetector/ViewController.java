@@ -3,6 +3,7 @@ package org.example.autumnleavesdetector;
 import MDisjointSet.DisjointSet;
 import MDisjointSet.mNode;
 import javafx.fxml.FXML;
+import javafx.geometry.Bounds;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Label;
@@ -40,6 +41,7 @@ public class ViewController {
     private boolean scanOptionOpen = false;
     private boolean pathOptions = false;
     private int disjointSetIdentificationSize = 0;
+    private int[][] centerPoints;
 
     @FXML
     public void initialize() throws FileNotFoundException {
@@ -153,51 +155,43 @@ private void onLassoReleased(MouseEvent e) {
 
     // Read the actual colours from the image underneath
     PixelReader imageReader = imgColorPicker.getPixelReader();
-    int[] redPath = new int[2];
-    int[] bluePath = new int[2];
-    int[] greenPath = new int[2];
+    int[] redPath   = new int[]{255, 0};
+    int[] greenPath = new int[]{255, 0};
+    int[] bluePath  = new int[]{255, 0};
+    boolean saving = false;
+
 
     for (int row = 0; row < colorFinderHeight; row++) {
-        boolean saving = false;
+        saving = false;
         for (int col = 0; col < colorFinderWidth; col++) {
             Color lasso = lassoReader.getColor(col, row);
-            if (lasso.getBrightness() < 0.3) {
-                saving = !saving; //Toggle the saving of hue after a black pixel
+
+            if (lasso.getBrightness() < 0.1) {
+                saving = !saving;
             } else if (saving) {
-                Color img = imageReader.getColor((int)(col*sx), (int)(col*sy));
-                int red = (int)img.getRed();
-                int blue = (int) img.getBlue();
-                int green = (int) img.getGreen();
-                if(red > redPath[1]) redPath[1] = (int)(red*.9);
-                System.out.println(red *.9);
-                if(red < redPath[0]) redPath[0] = (int)(red*1.1);
-                if(green > greenPath[1]) greenPath[1] = (int)(green*.9);
-                if(green < greenPath[0]) greenPath[0] = (int)(green*1.1);
-                if(blue > bluePath[1]) bluePath[1] = (int)(blue*.9);
-                if(blue < bluePath[0]) bluePath[0] = (int)(blue*1.1);
+                Color img = imageReader.getColor((int)(col * sx), (int)(row * sy));
+
+                // Skip near-white/washed-out pixels (outside the color wheel)
+                if(lasso.getBrightness() > .95) continue;
+
+                int red   = (int)(img.getRed()   * 255);
+                int green = (int)(img.getGreen() * 255);
+                int blue  = (int)(img.getBlue()  * 255);
+
+                if (red   > redPath[1])   redPath[1] = red;
+                if (red   < redPath[0])   redPath[0] = red;
+                if (green > greenPath[1]) greenPath[1] = green;
+                if (green < greenPath[0]) greenPath[0] = green;
+                if (blue  > bluePath[1])  bluePath[1] = blue;
+                if (blue  < bluePath[0])  bluePath[0] = blue;
             }
         }
     }
-    System.out.println("hihg red: " + redPath[1] + " low red : " + redPath[0]);
-    System.out.println("high blue: " + bluePath[1] + " low blue: " + bluePath[0]);
-    System.out.println("high green: " + greenPath[1] + " low green " + greenPath[0]);
-    //Gets the hue range taking the wrap of a color wheel into consideration
-//    double wrapGap = hues.get(0) + 360 - hues.get(hues.size() - 1);
-//    int gapIdx = -1;
-//
-//    for (int i = 0; i < hues.size() - 1; i++)
-//        if (hues.get(i + 1) - hues.get(i) > wrapGap)
-//        {
-//            wrapGap = hues.get(i + 1) - hues.get(i);
-//            gapIdx = i;
-//        }
-//
-//    double minHue = gapIdx == -1 ? hues.get(0)            : hues.get(gapIdx + 1);
-//    double maxHue = gapIdx == -1 ? hues.get(hues.size()-1) : hues.get(0) + 360;
-//
-//    System.out.println("min Hue " + minHue); // fix this
-//    System.out.println("max Hue " + maxHue);
 
+    System.out.println("Final paths:");
+    System.out.println("R: " + redPath[0] + " - " + redPath[1]);
+    System.out.println("G: " + greenPath[0] + " - " + greenPath[1]);
+    System.out.println("B: " + bluePath[0] + " - " + bluePath[1]);
         buildComponents(redPath, greenPath, bluePath);
     }
 //-------------------------------------------------------------------------------------------------------------------------
@@ -263,28 +257,20 @@ private void onLassoReleased(MouseEvent e) {
         for(int[] i : bounds.values()){
             boxes.add(i);
         }
+
+        centerPoints = new int[matchedRoots.size()][2];
+
+        for(int b = 0; b < boxes.size(); b++){
+            int x = (boxes.get(b)[0] + boxes.get(b)[2]) / 2;
+            int y = (boxes.get(b)[1] + boxes.get(b)[3]) / 2;
+            centerPoints[b] = new int[]{x, y};
+        }
         System.out.println(boxes.size());
         for (int i = boxes.size() - 1; i >= 0; i--) { //checks the size of each box to see if they are larger than 5 px if not, remove
             int[] b = boxes.get(i);
             if (b[2] - b[0] < 5 || b[3] - b[1] < 5)
                 boxes.remove(boxes.get(i));
         }
-//        boolean merged = true;
-//        while (merged) { // runs until there are no more boxes that overlap
-//            merged = false;
-//            for (int i = 0; i < boxes.size(); i++) { //loop therough evey box and compare it to following boxes
-//                for (int j = i + 1; j < boxes.size(); j++) {
-//                    if (overlaps(boxes.get(i), boxes.get(j))) {
-//                        mergeBox(boxes.get(i), boxes.get(j));
-//                        boxes.remove(boxes.get(j));
-//                        merged = true;
-//                        i = boxes.size(); // force outer loop to exit
-//                        break;
-//                    }
-//                }
-//            }
-//        }
-
         for(int[] i : boxes){
             drawBox(i[0], i[1], i[2], i[3]);
         }
@@ -316,10 +302,7 @@ private void onLassoReleased(MouseEvent e) {
         for (int r = r0; r <= r1; r++) { pw.setColor(c0, r, Color.NAVY); pw.setColor(c1, r, Color.NAVY); } //draw the rows of the box
     }
 
-    private void mergeBox(int[] a, int[] b) { //merges boxes into one
-        a[0] = Math.min(a[0], b[0]); a[1] = Math.min(a[1], b[1]);
-        a[2] = Math.max(a[2], b[2]); a[3] = Math.max(a[3], b[3]);
-    }
+
 
     //------------------------------------------------------------------------
     // Recolor
@@ -340,16 +323,21 @@ private void onLassoReleased(MouseEvent e) {
         matchedRoots.keySet().forEach(r -> map.put(r, Color.BLACK));
         recolorPixels(map);
         imgViewPane.setOnMouseMoved(e -> {
+            Bounds bounds = imgView.localToScene(imgView.getBoundsInLocal());
+            double offsetX = bounds.getMinX();
+            double offsetY = bounds.getMinY(); //Not fully scaled, fix, ts trash
+
             double scaleX = image.getWidth()  / imgView.getFitWidth();
             double scaleY = image.getHeight() / imgView.getFitHeight();
-            int curX = (int) (e.getX() * scaleX);
-            int curY = (int) (e.getY() * scaleY);
+
+            int curX = (int)((e.getSceneX() - offsetX) * scaleX);
+            int curY = (int)((e.getSceneY() - offsetY) * scaleY);
 
             if (curX < 0 || curX >= w() || curY < 0 || curY >= h()) return;
 
             mNode<int[]> hoveredCluster = ds.find(localDJSet[idx(curY, curX)]);
-
             resetImage();
+            blackAndWhiteRecolor();
             PixelWriter pw = writableImage.getPixelWriter();
             for (int row = 0; row < h(); row++) {
                 for (int col = 0; col < w(); col++) {
@@ -395,7 +383,16 @@ private void onLassoReleased(MouseEvent e) {
 
     private boolean hueInRange(Color c, int[] red, int[] green, int[] blue) {
         if (c.getSaturation() < 0.1 || c.getBrightness() < 0.1) return false;
-        return c.getRed() > red[0] && c.getRed() < red[1] && c.getGreen() > green[0] && c.getGreen() < green[1] && c.getBlue() > blue[0] && c.getBlue() < blue[1];
+        double max = Math.max(c.getRed()*255, Math.max(c.getGreen()*255, c.getBlue()*255));
+
+        double scale = 255.0 / max;
+        int rn = (int)(c.getRed()*255 * scale);
+        int gn = (int)(c.getGreen()*255 * scale);
+        int bn = (int)(c.getBlue()*255 * scale);
+
+        return rn >= red[0] && rn <= red[1] &&
+                gn >= green[0] && gn <= green[1] &&
+                bn >= blue[0] && bn <= blue[1];
     }
 
     private boolean overlaps(int[] a, int[] b) { //checks for the overlapping of the columns and rows whne creating boxes
@@ -409,28 +406,21 @@ private void onLassoReleased(MouseEvent e) {
         if (label    != null) p.getChildren().add(label);
         return p;
     }
-    private double[] mergeSort(double[] arr) {
-        if (arr.length <= 1) return arr;
 
-        int mid = arr.length / 2;
-        double[] left  = new double[mid];
-        double[] right = new double[mid];
-        for(int i = 0; i < mid; i++) left[i] = arr[i];
-        for(int i = mid, r = 0; i < arr.length-1; i++, r++) right[r] = arr[i];
+    private void TSP(int x, int y) {
+        int ax = 0;
+        int ay = 0;
+        int diffX = 99999;
+        int diffY = 99999;
+        PriorityQueue
+        mNode<int[]> root = ds.find(localDJSet[idx(x, y)]); //find the root of every disjoint set (pixel)
+        if (!matchedRoots.containsKey(root)) return;
+        for(int[] i : centerPoints){
+            if(root.getData()[0] -i[0] < diffX) ax = i[0];
+            if(root.getData()[1] -i[1] < diffY) ay = i[1];
+        }
 
-        return merge(left, right);
-    }
 
-    private double[] merge(double[] left, double[] right) {
-        double[] result = new double[left.length + right.length];
-        int l = 0, r = 0, i = 0;
 
-        while (l < left.length && r < right.length)
-            result[i++] = left[l] <= right[r] ? left[l++] : right[r++];
-
-        while (l < left.length)  result[i++] = left[l++];
-        while (r < right.length) result[i++] = right[r++]; //check how this works
-
-        return result;
     }
 }
