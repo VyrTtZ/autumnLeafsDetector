@@ -153,8 +153,10 @@ private void onLassoReleased(MouseEvent e) {
 
     // Read the actual colours from the image underneath
     PixelReader imageReader = imgColorPicker.getPixelReader();
+    int[] redPath = new int[2];
+    int[] bluePath = new int[2];
+    int[] greenPath = new int[2];
 
-    MyLinkedList<Double> hues = new MyLinkedList<>();
     for (int row = 0; row < colorFinderHeight; row++) {
         boolean saving = false;
         for (int col = 0; col < colorFinderWidth; col++) {
@@ -163,37 +165,44 @@ private void onLassoReleased(MouseEvent e) {
                 saving = !saving; //Toggle the saving of hue after a black pixel
             } else if (saving) {
                 Color img = imageReader.getColor((int)(col*sx), (int)(col*sy));
-                hues.add(img.getHue());
+                int red = (int)img.getRed();
+                int blue = (int) img.getBlue();
+                int green = (int) img.getGreen();
+                if(red > redPath[1]) redPath[1] = (int)(red*.9);
+                System.out.println(red *.9);
+                if(red < redPath[0]) redPath[0] = (int)(red*1.1);
+                if(green > greenPath[1]) greenPath[1] = (int)(green*.9);
+                if(green < greenPath[0]) greenPath[0] = (int)(green*1.1);
+                if(blue > bluePath[1]) bluePath[1] = (int)(blue*.9);
+                if(blue < bluePath[0]) bluePath[0] = (int)(blue*1.1);
             }
         }
     }
-    int n = hues.size();
-    double[] arr = new double[n];
-    for (int i = 0; i < n; i++) arr[i] = hues.get(i);
-
-
-    System.out.println("test1");
-mergeSort(arr);
-
+    System.out.println("hihg red: " + redPath[1] + " low red : " + redPath[0]);
+    System.out.println("high blue: " + bluePath[1] + " low blue: " + bluePath[0]);
+    System.out.println("high green: " + greenPath[1] + " low green " + greenPath[0]);
     //Gets the hue range taking the wrap of a color wheel into consideration
-    double wrapGap = hues.get(0) + 360 - hues.get(hues.size() - 1);
-    int gapIdx = -1;
+//    double wrapGap = hues.get(0) + 360 - hues.get(hues.size() - 1);
+//    int gapIdx = -1;
+//
+//    for (int i = 0; i < hues.size() - 1; i++)
+//        if (hues.get(i + 1) - hues.get(i) > wrapGap)
+//        {
+//            wrapGap = hues.get(i + 1) - hues.get(i);
+//            gapIdx = i;
+//        }
+//
+//    double minHue = gapIdx == -1 ? hues.get(0)            : hues.get(gapIdx + 1);
+//    double maxHue = gapIdx == -1 ? hues.get(hues.size()-1) : hues.get(0) + 360;
+//
+//    System.out.println("min Hue " + minHue); // fix this
+//    System.out.println("max Hue " + maxHue);
 
-    for (int i = 0; i < hues.size() - 1; i++)
-        if (hues.get(i + 1) - hues.get(i) > wrapGap)
-        { wrapGap = hues.get(i + 1) - hues.get(i); gapIdx = i; }
-
-    double minHue = gapIdx == -1 ? hues.get(0)            : hues.get(gapIdx + 1);
-    double maxHue = gapIdx == -1 ? hues.get(hues.size()-1) : hues.get(0) + 360;
-
-    System.out.println("min Hue " + minHue);
-    System.out.println("max Hue " + maxHue);
-
-        buildComponents(minHue, maxHue);
+        buildComponents(redPath, greenPath, bluePath);
     }
 //-------------------------------------------------------------------------------------------------------------------------
 
-    private void buildComponents(double minHue, double maxHue) {
+    private void buildComponents(int[] red, int[] green, int[] blue) {
         resetImage();
         DisjointSet<int[]> localDs = new DisjointSet<>();
         localDJSet = new mNode[w() * h()]; //array to store the disjoint sets
@@ -206,10 +215,10 @@ mergeSort(arr);
         for (int row = 0; row < h(); row++) {
             for (int col = 0; col < w(); col++) {
                 Color c = reader.getColor(col, row); //Read in every color for each pixle if its within the hue range the union it with pixles that have the same color to the right and below
-                if (!hueInRange(c, minHue, maxHue)) continue;
-                if (col + 1 < w() && hueInRange(reader.getColor(col + 1, row), minHue, maxHue))
+                if (!hueInRange(c, red, green, blue)) continue;
+                if (col + 1 < w() && hueInRange(reader.getColor(col + 1, row), red, green, blue))
                     localDs.union(localDJSet[idx(row, col)], localDJSet[idx(row, col + 1)]);
-                if (row + 1 < h() && hueInRange(reader.getColor(col, row + 1), minHue, maxHue))
+                if (row + 1 < h() && hueInRange(reader.getColor(col, row + 1), red, green, blue))
                     localDs.union(localDJSet[idx(row, col)], localDJSet[idx(row + 1, col)]);
             }
         }
@@ -218,7 +227,8 @@ mergeSort(arr);
         matchedRoots = new HashMap<>();
         for (int row = 0; row < h(); row++)
             for (int col = 0; col < w(); col++)
-                if (hueInRange(reader.getColor(col, row), minHue, maxHue) ){ //for every pixel in the color range add the
+                if (hueInRange(reader.getColor(col, row), red, green, blue) ){ //for every pixel in the color range add the
+                    //writableImage.getPixelWriter().setColor(row, col, Color.CYAN);
                     matchedRoots.put(localDs.find(localDJSet[idx(row, col)]), true); // put found root in the hashmap
                     disjointSetIdentificationSize++;
                 }
@@ -383,11 +393,9 @@ mergeSort(arr);
         imgView.setImage(writableImage);
     }
 
-    private boolean hueInRange(Color c, double minHue, double maxHue) {
+    private boolean hueInRange(Color c, int[] red, int[] green, int[] blue) {
         if (c.getSaturation() < 0.1 || c.getBrightness() < 0.1) return false;
-        double hue = c.getHue();
-        if (maxHue > 360 && hue < minHue) hue += 360;
-        return hue >= minHue && hue <= maxHue;
+        return c.getRed() > red[0] && c.getRed() < red[1] && c.getGreen() > green[0] && c.getGreen() < green[1] && c.getBlue() > blue[0] && c.getBlue() < blue[1];
     }
 
     private boolean overlaps(int[] a, int[] b) { //checks for the overlapping of the columns and rows whne creating boxes
@@ -408,7 +416,7 @@ mergeSort(arr);
         double[] left  = new double[mid];
         double[] right = new double[mid];
         for(int i = 0; i < mid; i++) left[i] = arr[i];
-        for(int i = mid, r = 0; i < arr.length; i++, r++) right[r] = arr[i];
+        for(int i = mid, r = 0; i < arr.length-1; i++, r++) right[r] = arr[i];
 
         return merge(left, right);
     }
