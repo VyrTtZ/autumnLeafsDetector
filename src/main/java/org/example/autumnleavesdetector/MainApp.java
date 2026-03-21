@@ -55,8 +55,4 @@ public class MainApp extends Application {
         stage.setScene(scene);
         stage.show();
     }
-
-    public static void setScene(int scene) {
-        MainApp.scene = scene;
-    }
 }
