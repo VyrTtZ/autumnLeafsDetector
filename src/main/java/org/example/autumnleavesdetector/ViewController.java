@@ -112,8 +112,14 @@ public class ViewController {
     }
 //-------------------------------------------------------------------------------------------------------------------------
     private void openPathOptions(){
+        System.out.println("goober");
         if(!pathOptions){
-            //starting node for the finding algorithm ts pmo
+            System.out.println("booober");
+            imgViewPane.setOnMouseClicked(e -> {
+                System.out.println("booger");
+                TSP((int)e.getX(), (int)e.getY());
+                    }
+            );
         }
     }
 //-------------------------------------------------------------------------------------------------------------------------
@@ -258,6 +264,12 @@ private void onLassoReleased(MouseEvent e) {
             boxes.add(i);
         }
 
+        for (int i = boxes.size() - 1; i >= 0; i--) { //checks the size of each box to see if they are larger than N number of  px if not, remove
+            int[] b = boxes.get(i);
+            if (b[2] - b[0] < 12 || b[3] - b[1] < 12)
+                boxes.remove(boxes.get(i));
+        }
+
         centerPoints = new int[matchedRoots.size()][2];
 
         for(int b = 0; b < boxes.size(); b++){
@@ -266,11 +278,7 @@ private void onLassoReleased(MouseEvent e) {
             centerPoints[b] = new int[]{x, y};
         }
         System.out.println(boxes.size());
-        for (int i = boxes.size() - 1; i >= 0; i--) { //checks the size of each box to see if they are larger than 5 px if not, remove
-            int[] b = boxes.get(i);
-            if (b[2] - b[0] < 5 || b[3] - b[1] < 5)
-                boxes.remove(boxes.get(i));
-        }
+
         for(int[] i : boxes){
             drawBox(i[0], i[1], i[2], i[3]);
         }
@@ -395,10 +403,6 @@ private void onLassoReleased(MouseEvent e) {
                 bn >= blue[0] && bn <= blue[1];
     }
 
-    private boolean overlaps(int[] a, int[] b) { //checks for the overlapping of the columns and rows whne creating boxes
-        return a[0] <= b[2] && a[2] >= b[0] && a[1] <= b[3] && a[3] >= b[1];
-    }
-
     private Pane makePane(double w, double h, String gradient, Label label) { //mapes panes for the navbar
         Pane p = new Pane();
         p.setPrefSize(w, h);
@@ -408,19 +412,39 @@ private void onLassoReleased(MouseEvent e) {
     }
 
     private void TSP(int x, int y) {
-        int ax = 0;
-        int ay = 0;
-        int diffX = 99999;
-        int diffY = 99999;
-        PriorityQueue
-        mNode<int[]> root = ds.find(localDJSet[idx(x, y)]); //find the root of every disjoint set (pixel)
-        if (!matchedRoots.containsKey(root)) return;
-        for(int[] i : centerPoints){
-            if(root.getData()[0] -i[0] < diffX) ax = i[0];
-            if(root.getData()[1] -i[1] < diffY) ay = i[1];
+        LinkedList<int[]> temp = new LinkedList<>();
+        for(int[] b : centerPoints) temp.add(b);
+
+        PixelWriter pw = writableImage.getPixelWriter();
+        int curX = x, curY = y;
+
+        while(!temp.isEmpty()){
+            int[] closest = null;
+            double closestDist = Double.MAX_VALUE;
+
+            for(int[] point : temp){
+                double dist = Math.pow(point[0] - curX, 2) + Math.pow(point[1] - curY, 2);
+                if(dist < closestDist){
+                    closestDist = dist;
+                    closest = point;
+                }
+            }
+
+            int dx = Math.abs(closest[0] - curX), dy = Math.abs(closest[1] - curY);
+            int sx = curX < closest[0] ? 1 : -1, sy = curY < closest[1] ? 1 : -1;
+            int err = dx - dy, tempX = curX, tempY = curY;
+            while(true){
+                pw.setColor(tempX, tempY, Color.RED);
+                if(tempX == closest[0] && tempY == closest[1]) break;
+                int e2 = 2 * err;
+                if(e2 > -dy){ err -= dy; tempX += sx; }
+                if(e2 <  dx){ err += dx; tempY += sy; }
+            }
+
+            curX = closest[0];
+            curY = closest[1];
+            temp.remove(closest);
         }
-
-
-
+        imgView.setImage(writableImage); // update once at the end
     }
 }
