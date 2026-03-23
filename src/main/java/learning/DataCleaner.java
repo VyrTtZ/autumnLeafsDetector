@@ -16,7 +16,7 @@ import java.util.HashMap;
 
 
 public class DataCleaner {
-
+//-----------------------------------------------------------------------------------------------------------------------
     static double[][] kernel = {
             {1/256.0,  4/256.0,  6/256.0,  4/256.0, 1/256.0},
             {4/256.0, 16/256.0, 24/256.0, 16/256.0, 4/256.0},
@@ -38,13 +38,13 @@ public class DataCleaner {
 
 
 
-
+//-----------------------------------------------------------------------------------------------------------------------
     public static void objectSeparator(File f) throws FileNotFoundException {
         Image image = new Image(new FileInputStream(f));
         int width = (int)image.getWidth(), height = (int)image.getHeight();
         PixelReader reader = image.getPixelReader();
 
-        // read pixels and convert to greyscale
+//---------------------------------------------------------Convert to greyscale
         int[] pixels = new int[width * height];
         reader.getPixels(0, 0, width, height, WritablePixelFormat.getIntArgbInstance(), pixels, 0, width);
         int[][] imageVals = new int[height][width];
@@ -54,7 +54,7 @@ public class DataCleaner {
                 imageVals[i][j] = (int)(0.299*((p>>16)&0xFF) + 0.587*((p>>8)&0xFF) + 0.114*(p&0xFF));
             }
 
-        // gaussian blur
+//----------------------------------------------------------Gaussian blur
         double[][] blurred = new double[height][width];
         for (int y = 2; y < height - 2; y++)
             for (int x = 2; x < width - 2; x++) {
@@ -65,7 +65,7 @@ public class DataCleaner {
                 blurred[y][x] = sum;
             }
 
-        // sobel edge detection
+//----------------------------------------------------------Sobel edge detection
         MyLinkedList<int[]> mLinkedList = new MyLinkedList<>();
         boolean[][] isEdge = new boolean[height][width];
         for (int y = 1; y < height - 1; y++)
@@ -83,7 +83,7 @@ public class DataCleaner {
                 }
             }
 
-        // build disjoint sets and union adjacent edges
+//------------------------------------------------------Set up disjoint sets
         mNode<int[]>[] pixelsDataImg = new mNode[width * height];
         DisjointSet<int[]> ds = new DisjointSet<>();
         for (int i = 0; i < height; i++)
@@ -96,7 +96,7 @@ public class DataCleaner {
             if (p[1] > 0 && isEdge[p[0]][p[1]-1]) ds.union(cur, pixelsDataImg[p[0] * width + (p[1]-1)]);
         }
 
-
+//-------------------------------------------------------Filter out smaller gaps when edges have matching directions
         int gapSize = 6, numDirs = 16;
         for (int[] i : mLinkedList) {
             int y = i[0], x = i[1];
@@ -109,8 +109,6 @@ public class DataCleaner {
                     int ny = y + dy*step, nx = x + dx*step;
                     if (ny < 0 || ny >= height || nx < 0 || nx >= width) break;
                     if (isEdge[ny][nx]) {
-                        // only fill if the found edge is roughly in the same direction
-                        // i.e. don't bridge across large dark regions
                         boolean clearPath = true;
                         for (int check = 1; check < step; check++) {
                             int cy = y + dy*check, cx = x + dx*check;
@@ -130,10 +128,10 @@ public class DataCleaner {
             }
         }
 
-        // filter small sets and show
         MyLinkedList<int[]> filtered = filter(mLinkedList, pixelsDataImg, width, ds);
         showEdges(filtered, width, height);
     }
+//----------------------------------------------------------------------------Filter out clusters which are smaller than 5
     private static MyLinkedList<int[]> filter(MyLinkedList<int[]> edgePixels, mNode<int[]>[] pixelsDataImg, int width, DisjointSet<int[]> ds) {
         HashMap<mNode<int[]>, Integer> counts = new HashMap<>();
         for (int[] p : edgePixels) {
@@ -146,7 +144,7 @@ public class DataCleaner {
         }
         return result;
     }
-
+//------------------------------------------------------------------------------Visualize the edges found
     public static void showEdges(MyLinkedList<int[]> edgePixels, int width, int height) {
         WritableImage edgeImage = new WritableImage(width, height);
         PixelWriter writer = edgeImage.getPixelWriter();
@@ -160,5 +158,6 @@ public class DataCleaner {
         stage.setScene(new Scene(new StackPane(new ImageView(edgeImage)), width, height));
         stage.show();
     }
+//------------------------------------------------------------------------------------------------------------------------------
 }
 

@@ -45,7 +45,7 @@ public class ViewController {
     private int lassoX, lassoY;
     private boolean scanOptionOpen = false;
     private int[][] centerPoints;
-
+//-----------------------------------------------------------------------------------------------------------------------
     @FXML
     public void initialize() throws FileNotFoundException {
         if (file == null) return;
@@ -72,7 +72,7 @@ public class ViewController {
         colorModeOption.setOnMousePressed(e -> openColorOptions());
         pathOption.setOnMousePressed(e      -> openPathOptions());
     }
-
+//-----------------------------------------------------------------------------------------------------------------------
     private void openScanOptions() {
         if (scanOptionOpen) return;
         scanOptionOpen = true;
@@ -88,7 +88,7 @@ public class ViewController {
         smartBtn.setOnMousePressed(_ -> smartBtn.setStyle("-fx-background-color: gray;"));
         optionsBox.getChildren().addAll(new Pane(), smartBtn);
     }
-
+//-----------------------------------------------------------------------------------------------------------------------
     private void openColorOptions() {
         if (matchedRoots == null || matchedRoots.isEmpty()) return;
         optionsBox.getChildren().clear();
@@ -101,11 +101,11 @@ public class ViewController {
         greenSizeScaleOption.setOnMouseClicked(_ -> emeraldGradientRecolor());
         optionsBox.getChildren().addAll(greyscaleOption, randomColorsOption, greenSizeScaleOption);
     }
-
+//-----------------------------------------------------------------------------------------------------------------------
     private void openPathOptions() {
         imgViewPane.setOnMouseClicked(e -> TSP((int) e.getX(), (int) e.getY()));
     }
-
+//-----------------------------------------------------------------------------------------------------------------------
     private void onLassoPressed(MouseEvent e) {
         if (e.getButton() == MouseButton.PRIMARY) {
             lassoX = (int) e.getX();
@@ -116,7 +116,7 @@ public class ViewController {
             lassoX = lassoY = 0;
         }
     }
-
+//-----------------------------------------------------------------------------------------------------------------------
     private void onLassoDragged(MouseEvent e) {
         gc.setStroke(Color.BLACK);
         gc.setLineWidth(1);
@@ -124,7 +124,7 @@ public class ViewController {
         lassoX = (int) e.getX();
         lassoY = (int) e.getY();
     }
-
+//-----------------------------------------------------------------------------------------------------------------------
     private void onLassoReleased(MouseEvent e) {
         int w = (int) canvasColorFinder.getWidth(), h = (int) canvasColorFinder.getHeight();
         WritableImage snapshot = new WritableImage(w, h);
@@ -136,7 +136,7 @@ public class ViewController {
         );
         buildComponents(new int[]{paths[0], paths[1]}, new int[]{paths[2], paths[3]}, new int[]{paths[4], paths[5]});
     }
-
+//-----------------------------------------------------------------------------------------------------------------------
     private void buildComponents(int[] red, int[] green, int[] blue) {
         resetImage();
         DisjointSet<int[]> localDs = new DisjointSet<>();
@@ -144,7 +144,7 @@ public class ViewController {
         matchedRoots = ImageProcessor.buildMatchedRoots(reader, w(), h(), red, green, blue, localDJSet, localDs);
         drawBoundingBoxes(localDs);
     }
-
+//-----------------------------------------------------------------------------------------------------------------------
     private void drawBoundingBoxes(DisjointSet<int[]> localDs) {
         resetImage();
         LinkedList<int[]> boxes = ImageProcessor.filterBoxes(
@@ -154,7 +154,7 @@ public class ViewController {
         for (int[] b : boxes) drawBox(b[0], b[1], b[2], b[3]);
         imgView.setImage(writableImage);
     }
-
+//-----------------------------------------------------------------------------------------------------------------------
     private void drawBox(int c0, int r0, int c1, int r1) {
         PixelWriter pw = writableImage.getPixelWriter();
         int djCounter = 0;
@@ -171,7 +171,7 @@ public class ViewController {
         for (int c = c0; c <= c1; c++) { pw.setColor(c, r0, Color.NAVY); pw.setColor(c, r1, Color.NAVY); }
         for (int r = r0; r <= r1; r++) { pw.setColor(c0, r, Color.NAVY); pw.setColor(c1, r, Color.NAVY); }
     }
-
+//-----------------------------------------------------------------------------------------------------------------------
     private void recolorPixels(HashMap<mNode<int[]>, Color> colorMap) {
         PixelWriter pw = writableImage.getPixelWriter();
         for (int row = 0; row < h(); row++)
@@ -179,7 +179,7 @@ public class ViewController {
                 pw.setColor(col, row, colorMap.getOrDefault(ds.find(localDJSet[idx(row, col)]), Color.WHITE));
         imgView.setImage(writableImage);
     }
-
+//-----------------------------------------------------------------------------------------------------------------------
     private void blackAndWhiteRecolor() {
         HashMap<mNode<int[]>, Color> map = new HashMap<>();
         matchedRoots.keySet().forEach(r -> map.put(r, Color.BLACK));
@@ -199,17 +199,17 @@ public class ViewController {
             imgView.setImage(writableImage);
         });
     }
-
+//-----------------------------------------------------------------------------------------------------------------------
     private void randomColorRecolor() {
         HashMap<mNode<int[]>, Color> map = new HashMap<>();
         matchedRoots.keySet().forEach(r -> map.put(r, Color.color(Math.random(), Math.random(), Math.random())));
         recolorPixels(map);
     }
-
+//-----------------------------------------------------------------------------------------------------------------------
     private void emeraldGradientRecolor() {
         recolorPixels((HashMap<mNode<int[]>, Color>) ImageProcessor.buildSizeGradientMap(matchedRoots, localDJSet, ds, w() * h()));
     }
-
+//-----------------------------------------------------------------------------------------------------------------------
     private void TSP(int x, int y) {
         PixelWriter pw = writableImage.getPixelWriter();
         int curX = x, curY = y;
@@ -219,16 +219,16 @@ public class ViewController {
         }
         imgView.setImage(writableImage);
     }
-
+//-----------------------------------------------------------------------------------------------------------------------
     private int w()               { return (int) image.getWidth(); }
     private int h()               { return (int) image.getHeight(); }
     private int idx(int r, int c) { return r * w() + c; }
-
+//-----------------------------------------------------------------------------------------------------------------------
     private void resetImage() {
         writableImage = new WritableImage(reader, w(), h());
         imgView.setImage(writableImage);
     }
-
+//-----------------------------------------------------------------------------------------------------------------------
     private Pane makePane(double w, double h, String gradient, Label label) {
         Pane p = new Pane();
         p.setPrefSize(w, h);
@@ -236,4 +236,5 @@ public class ViewController {
         if (label    != null) p.getChildren().add(label);
         return p;
     }
+//-----------------------------------------------------------------------------------------------------------------------
 }

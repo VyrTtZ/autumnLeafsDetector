@@ -11,7 +11,7 @@ import java.util.LinkedList;
 import java.util.Map;
 
 public class ImageProcessor {
-
+//-----------------------------------------------------------------------------------------------------------------------
     public static boolean hueInRange(Color c, int[] red, int[] green, int[] blue) { //check if c's paths are within the range of specified paths
         if (c.getSaturation() < 0.1 || c.getBrightness() < 0.1) return false;
         double max = Math.max(c.getRed()*255, Math.max(c.getGreen()*255, c.getBlue()*255));
@@ -23,7 +23,7 @@ public class ImageProcessor {
                 gn >= green[0] && gn <= green[1] &&
                 bn >= blue[0]  && bn <= blue[1];
     }
-
+//-----------------------------------------------------------------------------------------------------------------------
     public static int[] computeColorPaths(PixelReader lassoReader, PixelReader imageReader, int width, int height, double sx, double sy) { //computes the maximum and minimum colors bound by lasso over an image
         int[] r = {255, 0}, g = {255, 0}, b = {255, 0};
         boolean saving = false;
@@ -47,7 +47,7 @@ public class ImageProcessor {
         }
         return new int[]{r[0], r[1], g[0], g[1], b[0], b[1]};
     }
-
+//-----------------------------------------------------------------------------------------------------------------------
     public static mNode<int[]>[] buildDisjointSets(PixelReader reader, int w, int h, int[] red, int[] green, int[] blue, DisjointSet<int[]> ds) { // builds disjoint sets
         mNode<int[]>[] allSpecHueSets = new mNode[w * h];
         for (int row = 0; row < h; row++)
@@ -65,7 +65,7 @@ public class ImageProcessor {
             }
         return allSpecHueSets;
     }
-
+//-----------------------------------------------------------------------------------------------------------------------
     public static HashMap<mNode<int[]>, Boolean> buildMatchedRoots(PixelReader reader, int w, int h, int[] red, int[] green, int[] blue, mNode<int[]>[] djSet, DisjointSet<int[]> ds) {
         HashMap<mNode<int[]>, Boolean> matchedRoots = new HashMap<>();
         for (int row = 0; row < h; row++)
@@ -74,7 +74,7 @@ public class ImageProcessor {
                     matchedRoots.put(ds.find(djSet[row * w + col]), true);
         return matchedRoots;
     }
-
+//-----------------------------------------------------------------------------------------------------------------------
     public static HashMap<mNode<int[]>, int[]> computeBounds(int w, int h, mNode<int[]>[] djSet, DisjointSet<int[]> localDs, HashMap<mNode<int[]>, Boolean> matchedRoots) {
         HashMap<mNode<int[]>, int[]> bounds = new HashMap<>();
         for (int row = 0; row < h; row++)
@@ -90,14 +90,14 @@ public class ImageProcessor {
             }
         return bounds;
     }
-
+//-----------------------------------------------------------------------------------------------------------------------
     public static LinkedList<int[]> filterBoxes(LinkedList<int[]> boxes, int minSize) {
         LinkedList<int[]> result = new LinkedList<>();
         for (int[] b : boxes)
             if (b[2] - b[0] >= minSize && b[3] - b[1] >= minSize) result.add(b);
         return result;
     }
-
+//-----------------------------------------------------------------------------------------------------------------------
     public static int[][] computeCenterPoints(LinkedList<int[]> boxes) {
         int[][] centers = new int[boxes.size()][2];
         for (int i = 0; i < boxes.size(); i++) {
@@ -106,7 +106,7 @@ public class ImageProcessor {
         }
         return centers;
     }
-
+//-----------------------------------------------------------------------------------------------------------------------
     public static int[] findClosest(int curX, int curY, LinkedList<int[]> points) {
         int[] closest = null;
         double closestDist = Double.MAX_VALUE;
@@ -116,7 +116,7 @@ public class ImageProcessor {
         }
         return closest;
     }
-
+//-----------------------------------------------------------------------------------------------------------------------
     public static LinkedList<int[]> tspOrder(int startX, int startY, int[][] centerPoints) {
 
         LinkedList<int[]> temp = new LinkedList<>();
@@ -133,7 +133,7 @@ public class ImageProcessor {
         }
         return order;
     }
-
+//-----------------------------------------------------------------------------------------------------------------------
     public static void drawBresenhamLine(PixelWriter pw, int x0, int y0, int x1, int y1, Color color) {
         int dx = Math.abs(x1 - x0), dy = Math.abs(y1 - y0);
         int sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1;
@@ -146,7 +146,7 @@ public class ImageProcessor {
             if (e2 <  dx) { err += dx; y0 += sy; }
         }
     }
-
+//-----------------------------------------------------------------------------------------------------------------------
     public static Map<mNode<int[]>, Color> buildSizeGradientMap(HashMap<mNode<int[]>, Boolean> matchedRoots,
                                                                 mNode<int[]>[] djSet, DisjointSet<int[]> ds,
                                                                 int total) {
@@ -164,4 +164,5 @@ public class ImageProcessor {
         });
         return map;
     }
+
 }
