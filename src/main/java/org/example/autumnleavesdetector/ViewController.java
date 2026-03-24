@@ -89,9 +89,8 @@ public class ViewController {
         canvasColorFinder.setOnMousePressed(this::onLassoPressed);
         canvasColorFinder.setOnMouseDragged(this::onLassoDragged);
         canvasColorFinder.setOnMouseReleased(this::onLassoReleased);
-        Pane smartBtn = makePane(200, 100, null, new Label("Smart Finder"));
-        smartBtn.setOnMousePressed(_ -> smartBtn.setStyle("-fx-background-color: gray;"));
-        optionsBox.getChildren().addAll(new Pane(), smartBtn);
+        Label numOfCluster = new Label("Numer of clusters = " + matchedRoots.size());
+        optionsBox.getChildren().addAll(new Pane(), numOfCluster);
     }
 //-----------------------------------------------------------------------------------------------------------------------
     private void openColorOptions() {
