@@ -71,7 +71,7 @@ public class ImageProcessor {
         for (int row = 0; row < h; row++)
             for (int col = 0; col < w; col++)
                 if (hueInRange(reader.getColor(col, row), red, green, blue))
-                    matchedRoots.put(ds.find(djSet[row * w + col]), true);
+                    matchedRoots.put(ds.find(djSet[row * w + col]), 0);
         return matchedRoots;
     }
 //-----------------------------------------------------------------------------------------------------------------------

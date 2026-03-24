@@ -45,20 +45,14 @@
             </Pane>
 
          </HBox>
-
-         <!-- Main content -->
          <HBox VBox.vgrow="ALWAYS" spacing="16"
                style="-fx-padding: 16; -fx-background-color: #1e1e2e;">
-
-            <!-- Image view panel — controller sets imgView to MainApp.width/2 -->
             <Pane fx:id="imgViewPane" HBox.hgrow="ALWAYS"
                   style="-fx-background-color: #2a2a3e;
                          -fx-background-radius: 10;
                          -fx-border-color: #45475a;
                          -fx-border-radius: 10;
                          -fx-border-width: 1;"/>
-
-            <!-- Options panel — children added dynamically by controller -->
             <VBox fx:id="optionsBox" prefWidth="420"
                   style="-fx-background-color: #2a2a3e;
                          -fx-background-radius: 10;

@@ -4,20 +4,37 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<Pane xmlns="http://javafx.com/javafx/11.0.14-internal"
-      xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="org.example.autumnleavesdetector.MainController"
-      prefWidth="${MainApp.width}"
-      prefHeight="${MainApp.height}">
+<AnchorPane xmlns="http://javafx.com/javafx/17.0.2-ea"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="org.example.autumnleavesdetector.MainController"
+            style="-fx-background-color: #1e1e2e;">
    <children>
-      <Pane fx:id="newProjectPane" />
-      <Pane fx:id="signOutPane" />
-      <HBox fx:id="titleHBox" alignment="CENTER">
-         <Label fx:id="mainTitleLabel" text="Welcome to Leaf Finder">
-            <font>
-               <Font name="Arial" size="34.0" />
-            </font>
-         </Label>
-      </HBox>
+      <VBox AnchorPane.topAnchor="0" AnchorPane.bottomAnchor="0"
+            AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0"
+            alignment="CENTER" spacing="16"
+            style="-fx-padding: 16; -fx-background-color: #1e1e2e;">
+
+         <Pane fx:id="newProjectPane"
+               style="-fx-background-color: #2a2a3e;
+                      -fx-background-radius: 10;
+                      -fx-border-color: #45475a;
+                      -fx-border-radius: 10;
+                      -fx-border-width: 1;"/>
+
+         <Pane fx:id="signOutPane"
+               style="-fx-background-color: #2a2a3e;
+                      -fx-background-radius: 10;
+                      -fx-border-color: #45475a;
+                      -fx-border-radius: 10;
+                      -fx-border-width: 1;"/>
+
+         <HBox fx:id="titleHBox" alignment="CENTER">
+            <Label fx:id="mainTitleLabel" text="Welcome to Leaf Finder"
+                   style="-fx-text-fill: #cdd6f4;
+                          -fx-font-size: 34;
+                          -fx-font-weight: bold;"/>
+         </HBox>
+
+      </VBox>
    </children>
-</Pane>
+</AnchorPane>

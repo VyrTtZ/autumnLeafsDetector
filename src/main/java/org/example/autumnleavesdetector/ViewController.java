@@ -38,7 +38,11 @@ public class ViewController {
 
     private final DisjointSet<int[]> ds = new DisjointSet<>();
     private mNode<int[]>[] localDJSet;
-    private HashMap<mNode<int[]>, Boolean> matchedRoots;
+    private HashMap<mNode<int[]>, Integer> matchedRoots;
+
+    private boolean blackWhiteColorMode = false;
+    private boolean randomColorMode = false;
+    private boolean gradientColorMode = false;
 
     private Image imgColorPicker;
     private GraphicsContext gc;
@@ -162,51 +166,57 @@ public class ViewController {
             int px = k.getData()[0], py = k.getData()[1];
             if (px >= c0 && px <= c1 && py >= r0 && py <= r1 && ds.find(k) != k) djCounter++;
         }
-        Label l = new Label(Integer.toString(djCounter));
-        l.setStyle("-fx-font-size: 12px; -fx-text-fill: #39FF14; -fx-font-weight: bold;");
-        imgViewPane.getChildren().add(l);
-        l.toFront();
-        l.relocate((double)(c0+c1)/2 * (imgViewPane.getBoundsInParent().getWidth()  / image.getWidth()),
-                (double)(r0+r1)/2 * (imgViewPane.getBoundsInParent().getHeight() / image.getHeight()));
-        for (int c = c0; c <= c1; c++) { pw.setColor(c, r0, Color.NAVY); pw.setColor(c, r1, Color.NAVY); }
-        for (int r = r0; r <= r1; r++) { pw.setColor(c0, r, Color.NAVY); pw.setColor(c1, r, Color.NAVY); }
+
+        for (int c = c0; c <= c1; c++) { pw.setColor(c, r0, Color.BLUE); pw.setColor(c, r1, Color.BLUE); }
+        for (int r = r0; r <= r1; r++) { pw.setColor(c0, r, Color.BLUE); pw.setColor(c1, r, Color.BLUE); }
     }
 //-----------------------------------------------------------------------------------------------------------------------
     private void recolorPixels(HashMap<mNode<int[]>, Color> colorMap) {
         PixelWriter pw = writableImage.getPixelWriter();
         for (int row = 0; row < h(); row++)
             for (int col = 0; col < w(); col++)
-                pw.setColor(col, row, colorMap.getOrDefault(ds.find(localDJSet[idx(row, col)]), Color.WHITE));
+                pw.setColor(col, row, colorMap.getOrDefault(ds.find(localDJSet[idx(row, col)]), Color.BLACK));
         imgView.setImage(writableImage);
     }
 //-----------------------------------------------------------------------------------------------------------------------
     private void blackAndWhiteRecolor() {
+        blackWhiteColorMode = !blackWhiteColorMode;
+        randomColorMode = false;
+        gradientColorMode = false;
+
         HashMap<mNode<int[]>, Color> map = new HashMap<>();
-        matchedRoots.keySet().forEach(r -> map.put(r, Color.BLACK));
+        matchedRoots.keySet().forEach(r -> map.put(r, Color.WHITE));
         recolorPixels(map);
-        imgViewPane.setOnMouseMoved(e -> {
-            Bounds bounds = imgView.localToScene(imgView.getBoundsInLocal());
-            int curX = (int)((e.getSceneX() - bounds.getMinX()) * (image.getWidth()  / imgView.getFitWidth()));
-            int curY = (int)((e.getSceneY() - bounds.getMinY()) * (image.getHeight() / imgView.getFitHeight()));
-            if (curX < 0 || curX >= w() || curY < 0 || curY >= h()) return;
-            mNode<int[]> hovered = ds.find(localDJSet[idx(curY, curX)]);
-            resetImage();
-            blackAndWhiteRecolor();
-            PixelWriter pw = writableImage.getPixelWriter();
-            for (int row = 0; row < h(); row++)
-                for (int col = 0; col < w(); col++)
-                    if (ds.find(localDJSet[idx(row, col)]) == hovered) pw.setColor(col, row, Color.CYAN);
-            imgView.setImage(writableImage);
-        });
+        if(blackWhiteColorMode)
+            imgViewPane.setOnMouseMoved(e -> {
+                Bounds bounds = imgView.localToScene(imgView.getBoundsInLocal());
+                int curX = (int)((e.getSceneX() - bounds.getMinX()) * (image.getWidth()  / imgView.getFitWidth()));
+                int curY = (int)((e.getSceneY() - bounds.getMinY()) * (image.getHeight() / imgView.getFitHeight()));
+                if (curX < 0 || curX >= w() || curY < 0 || curY >= h()) return;
+                mNode<int[]> hovered = ds.find(localDJSet[idx(curY, curX)]);
+                resetImage();
+                blackAndWhiteRecolor();
+                PixelWriter pw = writableImage.getPixelWriter();
+                for (int row = 0; row < h(); row++)
+                    for (int col = 0; col < w(); col++)
+                        if (ds.find(localDJSet[idx(row, col)]) == hovered) pw.setColor(col, row, Color.CYAN);
+                imgView.setImage(writableImage);
+            });
     }
 //-----------------------------------------------------------------------------------------------------------------------
     private void randomColorRecolor() {
+        randomColorMode = !randomColorMode;
+        blackWhiteColorMode = false;
+        gradientColorMode = false;
         HashMap<mNode<int[]>, Color> map = new HashMap<>();
         matchedRoots.keySet().forEach(r -> map.put(r, Color.color(Math.random(), Math.random(), Math.random())));
         recolorPixels(map);
     }
 //-----------------------------------------------------------------------------------------------------------------------
     private void emeraldGradientRecolor() {
+        gradientColorMode = !gradientColorMode;
+        blackWhiteColorMode = false;
+        randomColorMode = false;
         recolorPixels((HashMap<mNode<int[]>, Color>) ImageProcessor.buildSizeGradientMap(matchedRoots, localDJSet, ds, w() * h()));
     }
 //-----------------------------------------------------------------------------------------------------------------------
@@ -237,4 +247,9 @@ public class ViewController {
         return p;
     }
 //-----------------------------------------------------------------------------------------------------------------------
+    private void removeGaps(){
+        for(mNode<int[]> n : localDJSet){
+            if(n.getData()[0]+1)
+        }
+    }
 }
