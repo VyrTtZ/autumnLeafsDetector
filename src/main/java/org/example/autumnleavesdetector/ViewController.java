@@ -75,6 +75,7 @@ public class ViewController {
         scanOption.setOnMousePressed(e      -> openScanOptions());
         colorModeOption.setOnMousePressed(e -> openColorOptions());
         pathOption.setOnMousePressed(e      -> openPathOptions());
+        hoverMethod();
     }
 //-----------------------------------------------------------------------------------------------------------------------
     private void openScanOptions() {
@@ -102,7 +103,7 @@ public class ViewController {
         Pane greenSizeScaleOption = makePane(200, 100, "linear-gradient(to right, darkgreen, lightgreen)", null);
         greyscaleOption.setOnMouseClicked(_      -> blackAndWhiteRecolor());
         randomColorsOption.setOnMouseClicked(_   -> randomColorRecolor());
-        greenSizeScaleOption.setOnMouseClicked(_ -> emeraldGradientRecolor());
+//        greenSizeScaleOption.setOnMouseClicked(_ -> emeraldGradientRecolor());
         optionsBox.getChildren().addAll(greyscaleOption, randomColorsOption, greenSizeScaleOption);
     }
 //-----------------------------------------------------------------------------------------------------------------------
@@ -213,12 +214,12 @@ public class ViewController {
         recolorPixels(map);
     }
 //-----------------------------------------------------------------------------------------------------------------------
-    private void emeraldGradientRecolor() {
-        gradientColorMode = !gradientColorMode;
-        blackWhiteColorMode = false;
-        randomColorMode = false;
-        recolorPixels((HashMap<mNode<int[]>, Color>) ImageProcessor.buildSizeGradientMap(matchedRoots, localDJSet, ds, w() * h()));
-    }
+//    private void emeraldGradientRecolor() {
+//        gradientColorMode = !gradientColorMode;
+//        blackWhiteColorMode = false;
+//        randomColorMode = false;
+//        recolorPixels((HashMap<mNode<int[]>, Color>) ImageProcessor.buildSizeGradientMap(matchedRoots, localDJSet, ds, w() * h()));
+//    }
 //-----------------------------------------------------------------------------------------------------------------------
     private void TSP(int x, int y) {
         PixelWriter pw = writableImage.getPixelWriter();
@@ -247,9 +248,14 @@ public class ViewController {
         return p;
     }
 //-----------------------------------------------------------------------------------------------------------------------
-    private void removeGaps(){
-        for(mNode<int[]> n : localDJSet){
-            if(n.getData()[0]+1)
+
+    private void hoverMethod(){
+        if(!blackWhiteColorMode && !randomColorMode && !gradientColorMode ){
+            imgViewPane.setOnMouseMoved(e ->{
+                if(matchedRoots.keySet().contains(ds.find(localDJSet[idx((int)e.getY(), (int)e.getX())]))){
+                    imgViewPane.getChildren().add(new Label(Integer.toString(matchedRoots.get(ds.find(localDJSet[idx((int)e.getY(), (int)e.getX())])))));
+                }
+            });
         }
     }
 }

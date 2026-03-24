@@ -66,16 +66,28 @@ public class ImageProcessor {
         return allSpecHueSets;
     }
 //-----------------------------------------------------------------------------------------------------------------------
-    public static HashMap<mNode<int[]>, Boolean> buildMatchedRoots(PixelReader reader, int w, int h, int[] red, int[] green, int[] blue, mNode<int[]>[] djSet, DisjointSet<int[]> ds) {
-        HashMap<mNode<int[]>, Boolean> matchedRoots = new HashMap<>();
+    public static HashMap<mNode<int[]>, Integer> buildMatchedRoots(PixelReader reader, int w, int h, int[] red, int[] green, int[] blue, mNode<int[]>[] djSet, DisjointSet<int[]> ds) {
+        HashMap<mNode<int[]>, Integer> matchedRoots = new HashMap<>();
+        mNode<int[]> curRoot = new mNode<>(new int[2]);
+        int rootcount = 0;
         for (int row = 0; row < h; row++)
             for (int col = 0; col < w; col++)
-                if (hueInRange(reader.getColor(col, row), red, green, blue))
-                    matchedRoots.put(ds.find(djSet[row * w + col]), 0);
+                if (hueInRange(reader.getColor(col, row), red, green, blue)){
+                    if(curRoot == ds.find(djSet[row * w + col])) rootcount ++;
+                    else {
+                        matchedRoots.put(curRoot, rootcount);
+                        rootcount = 0;
+                    }
+                    curRoot = ds.find(djSet[row * w + col]);
+
+
+
+                }
+
         return matchedRoots;
     }
 //-----------------------------------------------------------------------------------------------------------------------
-    public static HashMap<mNode<int[]>, int[]> computeBounds(int w, int h, mNode<int[]>[] djSet, DisjointSet<int[]> localDs, HashMap<mNode<int[]>, Boolean> matchedRoots) {
+    public static HashMap<mNode<int[]>, int[]> computeBounds(int w, int h, mNode<int[]>[] djSet, DisjointSet<int[]> localDs, HashMap<mNode<int[]>, Integer> matchedRoots) {
         HashMap<mNode<int[]>, int[]> bounds = new HashMap<>();
         for (int row = 0; row < h; row++)
             for (int col = 0; col < w; col++) {
