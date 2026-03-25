@@ -1,6 +1,8 @@
 package org.example.autumnleavesdetector;
 
+import javafx.application.Platform;
 import javafx.fxml.FXML;
+import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -15,10 +17,6 @@ import java.io.IOException;
 public class MainController {
     @FXML
     private HBox titleHBox;
-    @FXML
-    private Pane newProjectPane;
-    @FXML
-    private Pane signOutPane;
 
     @FXML
     public void initialize() throws FileNotFoundException {
@@ -28,15 +26,17 @@ public class MainController {
     private void setPaneBackgrounds() throws FileNotFoundException {
         double paneSize = MainApp.height * 0.25;
 
+        Pane newProjectPane = new Pane();
+        Pane signOutPane = new Pane();
+
         newProjectPane.setPrefSize(paneSize, paneSize);
         signOutPane.setPrefSize(paneSize, paneSize);
         titleHBox.setPrefWidth(MainApp.width);
+        titleHBox.setSpacing(600);
+        titleHBox.setAlignment(Pos.CENTER_LEFT);
 
-        // Set up images
-        ImageView imageAdd = new ImageView(new Image(new FileInputStream(
-                "src/main/resources/org.example.images/add.png")));
-        ImageView imageQuit = new ImageView(new Image(new FileInputStream(
-                "src/main/resources/org.example.images/sign-out.png")));
+        ImageView imageAdd = new ImageView(new Image(new FileInputStream("src/main/resources/org.example.images/add.png")));
+        ImageView imageQuit = new ImageView(new Image(new FileInputStream("src/main/resources/org.example.images/sign-out.png")));
 
         imageAdd.setFitWidth(paneSize);
         imageAdd.setFitHeight(paneSize);
@@ -48,16 +48,9 @@ public class MainController {
 
         newProjectPane.getChildren().add(imageAdd);
         signOutPane.getChildren().add(imageQuit);
+        titleHBox.getChildren().add(newProjectPane);
+        titleHBox.getChildren().add(signOutPane);
 
-        newProjectPane.relocate(
-                (MainApp.width * 0.25) - (paneSize / 2),
-                (MainApp.height * 0.5) - (paneSize / 2)
-        );
-
-        signOutPane.relocate(
-                (MainApp.width * 0.75) - (paneSize / 2),
-                (MainApp.height * 0.5) - (paneSize / 2)
-        );
 
         newProjectPane.setOnMousePressed(e -> {
             FileChooser fileChooser = new FileChooser();
@@ -73,5 +66,8 @@ public class MainController {
                 }
             }
         });
+        signOutPane.setOnMousePressed(e ->
+                        Platform.exit()
+                );
     }
 }

@@ -20,18 +20,6 @@ public class MainApp extends Application {
     public void start(Stage stage) throws IOException, InterruptedException {
         this.stage = stage;
         this.stage.setFullScreen(true);
-
-        Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
-
-        stage.setX(screenBounds.getMinX());
-        stage.setY(screenBounds.getMinY());
-        stage.setWidth(screenBounds.getWidth());
-        stage.setHeight(screenBounds.getHeight());
-
-        width = (int)screenBounds.getWidth();
-        height = (int)screenBounds.getHeight();
-
-        System.out.println("w: " + width + " h: " + height);
         loadStartView(stage);
     }
 

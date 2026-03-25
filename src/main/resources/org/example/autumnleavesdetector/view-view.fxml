@@ -19,7 +19,7 @@
 
             <Pane fx:id="scanOption" style="-fx-cursor: hand;">
                <children>
-                  <Label text="Scan" prefWidth="100" prefHeight="100"
+                  <Label text="Scan" prefWidth="500" prefHeight="200"
                          alignment="CENTER"
                          style="-fx-text-fill: #cdd6f4; -fx-font-size: 14;
                                 -fx-font-weight: bold;"/>
@@ -28,7 +28,7 @@
 
             <Pane fx:id="colorModeOption" style="-fx-cursor: hand;">
                <children>
-                  <Label text="Color Modes" prefWidth="100" prefHeight="100"
+                  <Label text="Color Modes" prefWidth="500" prefHeight="200"
                          alignment="CENTER"
                          style="-fx-text-fill: #cdd6f4; -fx-font-size: 14;
                                 -fx-font-weight: bold;"/>
@@ -37,7 +37,7 @@
 
             <Pane fx:id="pathOption" style="-fx-cursor: hand;">
                <children>
-                  <Label text="Pathfinding" prefWidth="100" prefHeight="100"
+                  <Label text="Pathfinding" prefWidth="500" prefHeight="200"
                          alignment="CENTER"
                          style="-fx-text-fill: #cdd6f4; -fx-font-size: 14;
                                 -fx-font-weight: bold;"/>

@@ -2,38 +2,13 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.*?>
 
-<AnchorPane xmlns="http://javafx.com/javafx/17.0.2-ea"
-            xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="org.example.autumnleavesdetector.MainController"
-            style="-fx-background-color: #1e1e2e;">
+<AnchorPane prefHeight="249.0" prefWidth="412.0" style="-fx-background-color: #1e1e2e;" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.autumnleavesdetector.MainController">
    <children>
-      <VBox AnchorPane.topAnchor="0" AnchorPane.bottomAnchor="0"
-            AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0"
-            alignment="CENTER" spacing="16"
-            style="-fx-padding: 16; -fx-background-color: #1e1e2e;">
+      <VBox alignment="CENTER" prefHeight="249.0" prefWidth="412.0" spacing="16" style="-fx-padding: 16; -fx-background-color: #1e1e2e;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+         <Label fx:id="mainTitleLabel" style="-fx-text-fill: #cdd6f4;                           -fx-font-size: 34;                           -fx-font-weight: bold;" text="Welcome to Leaf Finder" />
 
-         <Pane fx:id="newProjectPane"
-               style="-fx-background-color: #2a2a3e;
-                      -fx-background-radius: 10;
-                      -fx-border-color: #45475a;
-                      -fx-border-radius: 10;
-                      -fx-border-width: 1;"/>
-
-         <Pane fx:id="signOutPane"
-               style="-fx-background-color: #2a2a3e;
-                      -fx-background-radius: 10;
-                      -fx-border-color: #45475a;
-                      -fx-border-radius: 10;
-                      -fx-border-width: 1;"/>
-
-         <HBox fx:id="titleHBox" alignment="CENTER">
-            <Label fx:id="mainTitleLabel" text="Welcome to Leaf Finder"
-                   style="-fx-text-fill: #cdd6f4;
-                          -fx-font-size: 34;
-                          -fx-font-weight: bold;"/>
-         </HBox>
+         <HBox fx:id="titleHBox" alignment="CENTER" prefHeight="98.0" prefWidth="380.0" />
 
       </VBox>
    </children>
