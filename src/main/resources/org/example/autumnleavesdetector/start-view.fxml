@@ -1,15 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.control.Label?>
 
-<AnchorPane prefHeight="249.0" prefWidth="412.0" style="-fx-background-color: #1e1e2e;" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.autumnleavesdetector.MainController">
-   <children>
-      <VBox alignment="CENTER" prefHeight="249.0" prefWidth="412.0" spacing="16" style="-fx-padding: 16; -fx-background-color: #1e1e2e;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-         <Label fx:id="mainTitleLabel" style="-fx-text-fill: #cdd6f4;                           -fx-font-size: 34;                           -fx-font-weight: bold;" text="Welcome to Leaf Finder" />
+<VBox xmlns="http://javafx.com/javafx/17.0.2-ea"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="org.example.autumnleavesdetector.MainController"
+      fx:id="root" alignment="TOP_CENTER" spacing="0"
+      style="-fx-background-color: #F8F7F2;">
 
-         <HBox fx:id="titleHBox" alignment="CENTER" prefHeight="98.0" prefWidth="380.0" />
+    <HBox fx:id="header" alignment="CENTER" spacing="10"
+          style="-fx-padding: 16 24; -fx-border-color: #E0DED6; -fx-border-width: 0 0 1 0;">
+        <Label text="Leaf Finder" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+    </HBox>
 
-      </VBox>
-   </children>
-</AnchorPane>
+    <HBox fx:id="cardRow" alignment="CENTER" spacing="16"
+          style="-fx-padding: 40 32;"/>
+
+</VBox>

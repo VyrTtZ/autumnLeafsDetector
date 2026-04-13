@@ -7,4 +7,5 @@ module org.example.autumnleavesdetector {
 
     opens org.example.autumnleavesdetector to javafx.fxml;
     exports org.example.autumnleavesdetector;
+    exports org.example.autumnleavesdetector.jmh_generated to jmh.core;
 }

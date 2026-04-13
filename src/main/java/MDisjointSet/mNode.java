@@ -15,10 +15,6 @@ public class mNode<T> {
         return data;
     }
 
-    public void setData(T data) {
-        this.data = data;
-    }
-
     public mNode<T> getParent() {
         return parent;
     }

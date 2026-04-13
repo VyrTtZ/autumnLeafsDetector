@@ -7,11 +7,11 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 class DisjointSetTest {
-    DisjointSet<mNode<int[]>> testDJSet = new DisjointSet<>();
+    DisjointSet testDJSet = new DisjointSet<>();
     mNode<int[]> a, b, c, d, e, f, g, h, i;
+
     @BeforeEach
     void setUp() {
-
         a = new mNode<>(new int[]{0, 1});
         b = new mNode<>(new int[]{2, 1});
         c = new mNode<>(new int[]{2, 6});
@@ -21,26 +21,47 @@ class DisjointSetTest {
         g = new mNode<>(new int[]{7, 7});
         h = new mNode<>(new int[]{3, 1});
         i = new mNode<>(new int[]{0, 4});
-
     }
 
     @AfterEach
     void tearDown() {
+        a = b = c = d = e = f = g = h = i = null;
     }
-
 
     @Test
     void find() {
+        assertSame(a, testDJSet.find(a));
+    }
 
+    @Test
+    void findSameRoot() {
+        testDJSet.union(a, b);
+        assertSame(testDJSet.find(a), testDJSet.find(b));
+    }
+
+    @Test
+    void findNotSame() {
+        assertNotSame(testDJSet.find(a), testDJSet.find(b));
     }
 
     @Test
     void union() {
-
+        testDJSet.union(a, b);
+        testDJSet.union(b, c);
+        assertSame(testDJSet.find(a), testDJSet.find(c));
     }
 
     @Test
-    void orphanage() {
+    void unionSame() {
+        testDJSet.union(a, b);
+        mNode<int[]> rootBefore = testDJSet.find(a);
+        testDJSet.union(a, b);
+        assertSame(rootBefore, testDJSet.find(a));
+    }
 
+    @Test
+    void unionSameRank() {
+        testDJSet.union(a, b);
+        assertEquals(1, testDJSet.find(a).getRank());
     }
 }

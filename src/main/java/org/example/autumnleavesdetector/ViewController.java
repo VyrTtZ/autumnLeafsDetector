@@ -2,276 +2,458 @@ package org.example.autumnleavesdetector;
 
 import MDisjointSet.DisjointSet;
 import MDisjointSet.mNode;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.Slider;
 import javafx.scene.image.*;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.util.Duration;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 
 public class ViewController {
-    @FXML
-    Pane scanOption, colorModeOption, imgViewPane, pathOption;
-    @FXML
-    VBox optionsBox;
-    @FXML
-    Canvas canvasColorFinder;
+
+    @FXML Pane imgViewPane;
+    @FXML StackPane scanOption, colorModeOption, pathOption;
+    @FXML VBox optionsBox;
+    @FXML Canvas canvasColorFinder;
+
     public static File file;
     private static Image image;
     private WritableImage writableImage;
     private PixelReader reader;
-    private ImageView imgView;
+    private static ImageView imgView;
     private PixelWriter pw;
+    private int h, w;
 
-    public static final DisjointSet<int[]> ds = new DisjointSet<>();
+    private static final DisjointSet<int[]> ds = new DisjointSet<>();
     private mNode<int[]>[] allPixelsDJsets;
-    private HashMap<mNode<int[]>, Integer> roots;
-    private HashMap<mNode<int[]>, Integer> rootsWithPlacement;
+    private HashMap<mNode<int[]>, Integer> roots = new HashMap<>();
+    private HashMap<mNode<int[]>, Integer> rootsWithPlacement = new HashMap<>();
+    private HashMap<mNode<int[]>, int[]> bounds = new HashMap<>();
+    private LinkedList<int[]> boxes = new LinkedList<>();
+    private int[][] centerPoints;
 
-    private boolean blackWhiteColorMode = false;
-    private boolean randomColorMode = false;
     private Image imgColorPicker;
     private GraphicsContext gc;
     private int lassoX, lassoY;
+    private double hueMin = 360, hueMax = 0;
+    private double smoothX, smoothY;
+
     private boolean scanOptionOpen = false;
     private boolean colorOptionOpen = false;
-    private int[][] centerPoints;
-//-----------------------------------------------------------------------------------------------------------------------
+    private boolean blackWhiteColorMode = false;
+    private boolean randomColorMode = false;
+    private int gapInt = 0, terminateInt = 0;
+    private Canvas imgData;
+    private Label numOfCluster;
+
+    private final ContextMenu hoverMenu = new ContextMenu();
+    private final MenuItem hoverItem = new MenuItem();
+
+    //------------------------------------------------------------------------------------------------------------------ INIT
+
     @FXML
     public void initialize() throws FileNotFoundException {
+        try {
+            image = new Image(new FileInputStream(file), (int) imgViewPane.getWidth(), (int) imgViewPane.getHeight(), true, true);
+        } catch (FileNotFoundException e) { throw new RuntimeException(e); }
 
-//        scanOption.setPrefSize((double) MainApp.width / 3, (double) MainApp.height / 10); //Issue because of main.app.witdth = 0;
-//        colorModeOption.setPrefSize((double) MainApp.width / 3, (double) MainApp.height / 10);
-//        pathOption.setPrefSize((double) MainApp.width / 3, (double) MainApp.height / 10);
+        w = (int) image.getWidth();
+        h = (int) image.getHeight();
 
-        image = new Image(new FileInputStream(file));
-        writableImage = new WritableImage(image.getPixelReader(), w(), h());
-        reader = image.getPixelReader();
+        writableImage = new WritableImage(image.getPixelReader(), w, h);
+        reader = writableImage.getPixelReader();
         pw = writableImage.getPixelWriter();
 
-        imgViewPane.setPrefSize(600, 600);
         imgView = new ImageView(writableImage);
         imgView.setPreserveRatio(true);
-        imgView.setFitWidth(500);
-        imgView.setFitHeight(500);
-        imgView.setX(100);
-        imgView.setY(100);
+        imgView.fitWidthProperty().bind(imgViewPane.widthProperty());
+        imgView.fitHeightProperty().bind(imgViewPane.heightProperty());
+
         imgViewPane.getChildren().add(imgView);
 
+        imgData = new Canvas();
+        imgData.widthProperty().bind(imgViewPane.widthProperty());
+        imgData.heightProperty().bind(imgViewPane.heightProperty());
 
-        System.out.println("testiong diddyballz");
-        scanOption.setOnMousePressed(e      -> {
-            openScanOptions();
-            System.out.println("Diddy");
-        });
-        colorModeOption.setOnMousePressed(e -> openColorOptions());
-        pathOption.setOnMousePressed(e      -> openPathOptions());
-        hoverMethod();
+
+        imgViewPane.getChildren().add(imgData);
+
+        scanOption.setOnMousePressed(_      -> openScanOptions());
+        colorModeOption.setOnMousePressed(_ -> openColorOptions());
+        pathOption.setOnMousePressed(_      -> openPathOptions());
     }
-//-----------------------------------------------------------------------------------------------------------------------
-    private void openScanOptions() {
-        if (scanOptionOpen) return;
 
-        scanOptionOpen = true;
+    //------------------------------------------------------------------------------------------------------------------ PROJECT MANAGEMENT OPTIONS
+
+    private void openScanOptions() {
+        if (scanOptionOpen) return; //if already open
+
+        scanOptionOpen  = true;
         colorOptionOpen = false;
 
-        optionsBox.getChildren().clear();
-        optionsBox.getChildren().add(canvasColorFinder);
-        optionsBox.setSpacing(3);
+        allPixelsDJsets = new mNode[w * h]; //reset everything
+        roots.clear();
+        rootsWithPlacement.clear();
+        bounds.clear();
+        boxes.clear();
+        centerPoints = null;
+        writableImage = new WritableImage(image.getPixelReader(), w, h);
+        pw = writableImage.getPixelWriter();
+        imgView.setImage(writableImage);
 
-        imgView.setImage(new WritableImage(reader, w(), h()));
-
-        try {
-            imgColorPicker = new Image(new FileInputStream("src/main/resources/org.example.images/colorWheel.png"));
-        } catch (FileNotFoundException ex) {
-            throw new RuntimeException(ex);
-        }
-
+        imgColorPicker = new Image(getClass().getResourceAsStream("/org.example.images/colorWheel.png"));
         gc = canvasColorFinder.getGraphicsContext2D();
         gc.drawImage(imgColorPicker, 0, 0, canvasColorFinder.getWidth(), canvasColorFinder.getHeight());
 
         canvasColorFinder.setOnMousePressed(e -> onLassoPressed(e));
         canvasColorFinder.setOnMouseDragged(e -> onLassoDragged(e));
-        canvasColorFinder.setOnMouseReleased(e -> onLassoReleased(e));
+        canvasColorFinder.setOnMouseReleased(_ -> onLassoReleased());
+        imgViewPane.setOnMouseMoved(e -> hoverDetails(e));
 
-
-
+        optionsBox.getChildren().setAll(canvasColorFinder);
     }
-//-----------------------------------------------------------------------------------------------------------------------
+
     private void openColorOptions() {
         if (roots == null || roots.isEmpty() || colorOptionOpen) return;
-
         colorOptionOpen = true;
-        scanOptionOpen = false;
+        scanOptionOpen  = false;
 
-        optionsBox.getChildren().clear();
-        optionsBox.setSpacing(3);
-
+        imgData.getGraphicsContext2D().clearRect(0, 0, imgData.getWidth(), imgData.getHeight());
 
         Pane greyscaleOption = new Pane();
-        greyscaleOption.setPrefSize(200, 200);
-        greyscaleOption.setStyle("-fx-background-color: linear-gradient(to right, black, white)");
+        greyscaleOption.setPrefSize(300, 60);
+        greyscaleOption.setStyle("-fx-background-color: linear-gradient(to right, black, white); -fx-background-radius: 6;");
 
         Pane randomColorsOption = new Pane();
-        randomColorsOption.setPrefSize(200, 200);
-        randomColorsOption.setStyle("-fx-background-color: linear-gradient(to right, red, green, blue, purple)");
-
-        Slider sliderGaps = new Slider(0, 144, 8);
-        Slider sliderFilter = new Slider(0, 144, 8);
+        randomColorsOption.setPrefSize(300, 60);
+        randomColorsOption.setStyle("-fx-background-color: linear-gradient(to right, red, green, blue, purple); -fx-background-radius: 6;");
 
 
+        Slider sliderGaps   = new Slider(0, 30, 0);
+        Slider sliderFilter = new Slider(0, 30, 0);
 
-        greyscaleOption.setOnMouseClicked(_      -> blackAndWhiteRecolor());
-        randomColorsOption.setOnMouseClicked(_   -> randomColorRecolor());
+
+        greyscaleOption.setOnMouseClicked(_    -> blackAndWhiteRecolor());
+        randomColorsOption.setOnMouseClicked(_ -> randomColorRecolor());
 
 
-        optionsBox.getChildren().addAll(greyscaleOption, randomColorsOption, new Label("Gap filling slider"),sliderGaps, new Label("Small filter slider"),sliderFilter);
+        sliderGaps.setOnMouseReleased(_ -> {
+            gapInt = (int) sliderGaps.getValue();
+            buildSets();
+            fill(gapInt);
+            resetAndRedraw();
+        });
+
+        sliderFilter.setOnMouseReleased(_ -> {
+            terminateInt = (int) sliderFilter.getValue();
+            buildSets();
+            smallOnesRemoval(terminateInt);
+            resetAndRedraw();
+        });
+
+
+        optionsBox.getChildren().setAll(
+                greyscaleOption, randomColorsOption,
+                new Label("Gap filling slider"),  sliderGaps,
+                new Label("Small filter slider"), sliderFilter
+        );
+        optionsBox.setSpacing(10);
     }
-//-----------------------------------------------------------------------------------------------------------------------
+
     private void openPathOptions() {
         imgViewPane.setOnMouseClicked(e -> TSP((int) e.getX(), (int) e.getY()));
     }
-//-----------------------------------------------------------------------------------------------------------------------
-    private void onLassoPressed(MouseEvent e) {
 
+    //------------------------------------------------------------------------------------------------------------------ LASSO METHODS
+
+    private void onLassoPressed(MouseEvent e) {
+        if(optionsBox.getChildren().contains(numOfCluster))
+            optionsBox.getChildren().remove(numOfCluster);
+
+        hueMin = 360; hueMax = 0;
         if (e.getButton() == MouseButton.PRIMARY) {
-            lassoX = (int) e.getX();
-            lassoY = (int) e.getY();
+            lassoX = (int) e.getX(); lassoY = (int) e.getY();
+            smoothX = lassoX; smoothY = lassoY;
         } else {
             gc.clearRect(0, 0, canvasColorFinder.getWidth(), canvasColorFinder.getHeight());
             gc.drawImage(imgColorPicker, 0, 0, canvasColorFinder.getWidth(), canvasColorFinder.getHeight());
             lassoX = lassoY = 0;
         }
-
     }
-//-----------------------------------------------------------------------------------------------------------------------
+
     private void onLassoDragged(MouseEvent e) {
+        if (!e.isPrimaryButtonDown()) return;
+        smoothX += (e.getX() - smoothX) * 0.1;
+        smoothY += (e.getY() - smoothY) * 0.1;
 
         gc.setStroke(Color.BLACK);
         gc.setLineWidth(1);
-        gc.strokeLine(lassoX, lassoY, e.getX(), e.getY());
-        lassoX = (int) e.getX();
-        lassoY = (int) e.getY();
+        gc.strokeLine(lassoX, lassoY, smoothX, smoothY);
+        lassoX = (int) smoothX;
+        lassoY = (int) smoothY;
 
+        Color c = imgColorPicker.getPixelReader().getColor(lassoX, lassoY);
+        if (c.getSaturation() > 0.01 && c.getBrightness() > 0.01) {
+            double hue = c.getHue();
+            if (hue > hueMax) hueMax = hue;
+            if (hue < hueMin) hueMin = hue;
+        }
     }
-//-----------------------------------------------------------------------------------------------------------------------
-    private void onLassoReleased(MouseEvent e) {
 
-        int w = (int) canvasColorFinder.getWidth(), h = (int) canvasColorFinder.getHeight();
+    private void onLassoReleased() {
+        buildSets();
+        setupRoots();
+        smallOnesRemoval(20);
+        orderClusters();
+        setupBounds();
+        manageBoxes();
+        drawBoxes();
+        drawNumbers();
 
-        WritableImage snapshot = new WritableImage(w, h);
-        canvasColorFinder.snapshot(null, snapshot);
-
-        int[] paths = ImageProcessor.computeColorPaths(
-                snapshot.getPixelReader(), imgColorPicker.getPixelReader(), w, h,
-                imgColorPicker.getWidth() / w, imgColorPicker.getHeight() / h
-        );
-
-        buildComponents(new int[]{paths[0], paths[1]}, new int[]{paths[2], paths[3]}, new int[]{paths[4], paths[5]});
-        Label numOfCluster = new Label("Numer of clusters = " + roots.size());
-        numOfCluster.setStyle(
-                "-fx-font-size: 24px;" +
-                        "-fx-font-weight: bold;" +
-                        "-fx-text-fill: cyan;" +
-                        "-fx-effect: dropshadow(gaussian, cyan, 10, 0.8, 0, 0);" +
-                        "-fx-background-color: black;" +
-                        "-fx-padding: 8px;" +
-                        "-fx-border-color: cyan;" +
-                        "-fx-border-width: 2px;"
-        );
-        optionsBox.getChildren().addAll(new Pane(), numOfCluster);
-    }
-//-----------------------------------------------------------------------------------------------------------------------
-    private void buildComponents(int[] red, int[] green, int[] blue) {
-
-        allPixelsDJsets = ImageProcessor.buildDisjointSets(reader, w(), h(), red, green, blue);
-
-        roots = ImageProcessor.buildRoots(reader, w(), h(), red, green, blue, allPixelsDJsets);
-
-        LinkedList<int[]> boxes = ImageProcessor.filterBoxes(
-                new LinkedList<>(ImageProcessor.computeBounds(w(), h(), allPixelsDJsets, ds, roots).values()), 12
-        );
-
-        centerPoints = ImageProcessor.computeCenterPoints(boxes);
-
-        for (int[] b : boxes)
-            drawBox(b[0], b[1], b[2], b[3]);
         imgView.setImage(writableImage);
+        numOfCluster = new Label("Estimating : " + roots.size() + " leaves / clusters");
+        optionsBox.getChildren().add(numOfCluster);
     }
-    private void orderClusters(){
+
+    private void hoverDetails(MouseEvent e) {
+        int currX = (int)(e.getX() * w / imgView.getBoundsInLocal().getWidth());
+        int currY = (int)(e.getY() * h / imgView.getBoundsInLocal().getHeight());
+        mNode<int[]> root = null;
+        if (!inBounds(currY, currX)) { hoverMenu.hide(); return; }
+        if(allPixelsDJsets[idx(currY, currX)] != null)
+            root = ds.find(allPixelsDJsets[idx(currY, currX)]);
+        if(root != null) {
+            if (!roots.containsKey(root)) {
+                hoverMenu.hide();
+                return;
+            }
+
+            int size = roots.get(root);
+            int number = rootsWithPlacement.getOrDefault(root, -1);
+
+            hoverItem.setText("leaf " +  number + " — " + size + " px");
+            hoverMenu.getItems().setAll(hoverItem);
+            hoverMenu.show(imgData, e.getScreenX() + 10, e.getScreenY() + 10);
+        }
+    }
+
+    //------------------------------------------------------------------------------------------------------------------ BUILD OF SETS
+
+    private void buildSets() {
+        for (int row = 0; row < h; row++)
+            for (int col = 0; col < w; col++)
+                allPixelsDJsets[idx(row, col)] = ds.makeSet(new int[]{col, row});
+
+        for (int row = 0; row < h; row++)
+            for (int col = 0; col < w; col++) {
+                Color c = reader.getColor(col, row);
+                if (!hueInRange(c)) continue;
+                if (col + 1 < w && hueInRange(reader.getColor(col + 1, row))){
+                    ds.union(allPixelsDJsets[idx(row, col)], allPixelsDJsets[idx(row, col) + 1]);
+                }
+
+                if (row + 1 < h && hueInRange(reader.getColor(col, row + 1))) {
+                    ds.union(allPixelsDJsets[idx(row, col)], allPixelsDJsets[(row + 1) * w + col]);
+                }
+            }
+    }
+
+    private void setupRoots() {
+        roots = new HashMap<>();
+        for (int row = 0; row < h; row++)
+            for (int col = 0; col < w; col++)
+                if (hueInRange(reader.getColor(col, row))) {
+                    mNode<int[]> root = ds.find(allPixelsDJsets[idx(row, col)]);
+                    roots.put(root, roots.getOrDefault(root, 0) + 1);
+                }
+    }
+
+    private void setupBounds() {
+
+        bounds = new HashMap<>();
+
+        for (int i = 0; i < h; i++)
+            for (int j = 0; j < w; j++) {
+
+                mNode<int[]> root = ds.find(allPixelsDJsets[idx(i, j)]);
+                if (!roots.containsKey(root)) continue;
+
+                if (!bounds.containsKey(root))
+                    bounds.put(root, new int[]{j, i, j, i});
+                else {
+                    int[] b = bounds.get(root);
+                    if (j < b[0]) b[0] = j;
+                    if (i < b[1]) b[1] = i;
+                    if (j > b[2]) b[2] = j;
+                    if (i > b[3]) b[3] = i;
+                }
+            }
+    }
+
+    private void manageBoxes() {
+
+        boxes.clear();
+
+        for (int[] b : bounds.values())
+            if (b[2] - b[0] >= terminateInt && b[3] - b[1] >= terminateInt) boxes.add(b);
+
+        centerPoints = new int[roots.size()][2];
+        for (int i = 0; i < boxes.size(); i++) {
+            int[] b = boxes.get(i);
+            centerPoints[i] = new int[]{(b[0] + b[2]) / 2, (b[1] + b[3]) / 2};
+        }
+    }
+
+    private void orderClusters() {
         LinkedList<mNode<int[]>> temp = new LinkedList<>(roots.keySet());
-        for (int x = 1; x < temp.size(); x++) { //insertion sort
+        for (int x = 1; x < temp.size(); x++) {
             mNode<int[]> n = temp.get(x);
             int j = x - 1;
-            while (j >= 0 && roots.get(temp.get(j)) > roots.get(n)) {
-                temp.set(j + 1, temp.get(j));
-                j--;
+            while (j >= 0 && roots.get(temp.get(j)) < roots.get(n)) {
+                temp.set(j + 1, temp.get(j)); j--;
             }
             temp.set(j + 1, n);
         }
         int index = 1;
-        for(mNode<int[]> n : temp){
-            rootsWithPlacement.put(n, index);
-            index++;
+        for (mNode<int[]> n : temp) rootsWithPlacement.put(n, index++);
+    }
+
+    //------------------------------------------------------------------------------------------------------------------ RESULT MANAGEMENT
+
+    private void fill(int dist) {
+        for (int pass = 0; pass < dist; pass++) {
+            boolean[][] isCluster = new boolean[h][w];
+            for (int row = 0; row < h; row++)
+                for (int col = 0; col < w; col++)
+                    isCluster[row][col] = roots.containsKey(ds.find(allPixelsDJsets[idx(row, col)]));
+
+            for (int row = 0; row < h; row++)
+                for (int col = 0; col < w; col++) {
+                    if (!isCluster[row][col]) continue;
+                    int[][] nb = {{row-1,col},{row+1,col},{row,col-1},{row,col+1}};
+                    for (int[] n : nb)
+                        if (inBounds(n[0],n[1]) && !isCluster[n[0]][n[1]])
+                            ds.union(allPixelsDJsets[idx(row,col)], allPixelsDJsets[idx(n[0],n[1])]);
+                }
         }
     }
-//-----------------------------------------------------------------------------------------------------------------------
-    private void drawBox(int c0, int r0, int c1, int r1) {
-        for (int c = c0; c <= c1; c++){
-            pw.setColor(c, r0, Color.BLUE); pw.setColor(c, r1, Color.BLUE);
-        }
-        for (int r = r0; r <= r1; r++){
-            pw.setColor(c0, r, Color.BLUE); pw.setColor(c1, r, Color.BLUE);
+
+    private void smallOnesRemoval(int b) {
+        LinkedList<mNode<int[]>> toRemove = new LinkedList<>();
+        for (mNode<int[]> n : roots.keySet())
+            if (roots.get(n) < b) toRemove.add(n);
+        for (mNode<int[]> n : toRemove) roots.remove(n);
+
+        for (mNode<int[]> pixel : allPixelsDJsets)
+            if (!roots.containsKey(ds.find(pixel)))
+                pixel.setParent(pixel);
+    }
+
+    //------------------------------------------------------------------------------------------------------------------ DRAWING METHODS
+
+    private void drawBoxes() {
+        for (int[] b : boxes) {
+            for (int c = b[0]; c <= b[2]; c++) {
+                pw.setColor(c, b[1], Color.BLUE);
+                pw.setColor(c, b[3], Color.BLUE);
+            }
+            for (int r = b[1]; r <= b[3]; r++) {
+                pw.setColor(b[0], r, Color.BLUE);
+                pw.setColor(b[2], r, Color.BLUE);
+            }
         }
     }
-//-----------------------------------------------------------------------------------------------------------------------
-    private void recolorPixels(HashMap<mNode<int[]>, Color> colorMap) {
-        PixelWriter pw = writableImage.getPixelWriter();
-        for (int row = 0; row < h(); row++)
-            for (int col = 0; col < w(); col++)
-                pw.setColor(col, row, colorMap.getOrDefault(ds.find(allPixelsDJsets[idx(row, col)]), Color.BLACK));
+    private void drawNumbers() {
+        GraphicsContext gc = imgData.getGraphicsContext2D();
+        gc.clearRect(0, 0, imgData.getWidth(), imgData.getHeight());
+
+        gc.setFont(Font.font(9));
+        gc.setFill(Color.GREEN);
+        gc.setStroke(Color.WHITE);
+        gc.setLineWidth(2);
+
+
+        for (mNode<int[]> n : rootsWithPlacement.keySet()) {
+            int[] b = bounds.get(n);
+            if (b == null) continue;
+
+            double x = ((b[0] + b[2]) / 2.0) * (imgView.getBoundsInLocal().getWidth()  / w);
+            double y = ((b[1] + b[3]) / 2.0) * (imgView.getBoundsInLocal().getHeight() / h);
+
+            String text = Integer.toString(rootsWithPlacement.get(n));
+            gc.strokeText(text, x, y);
+            gc.fillText(text,   x, y);
+        }
+    }
+
+    private void resetAndRedraw() {
+        roots.clear();
+        rootsWithPlacement.clear();
+        bounds.clear();
+        setupRoots();
+        System.out.println(roots.size());
+        smallOnesRemoval(20);
+        System.out.println(roots.size() + "---");
+        orderClusters();
+        setupBounds();
+        manageBoxes();
+
+        writableImage = new WritableImage(image.getPixelReader(), w, h);
+        pw = writableImage.getPixelWriter();
+        drawBoxes();
         imgView.setImage(writableImage);
     }
-//-----------------------------------------------------------------------------------------------------------------------
+
     private void blackAndWhiteRecolor() {
         blackWhiteColorMode = !blackWhiteColorMode;
         randomColorMode = false;
 
         HashMap<mNode<int[]>, Color> map = new HashMap<>();
-        for(mNode<int[]> n : roots.keySet())
-            map.put(n, Color.WHITE);
+        for (mNode<int[]> n : roots.keySet()) map.put(n, Color.WHITE);
 
-        recolorPixels(map);
+        for (int row = 0; row < h; row++)
+            for (int col = 0; col < w; col++)
+                pw.setColor(col, row, map.getOrDefault(ds.find(allPixelsDJsets[idx(row, col)]), Color.BLACK));
+
+        imgView.setImage(writableImage);
+
 
         if(blackWhiteColorMode)
 
             imgViewPane.setOnMouseMoved(e -> {
 
-                int curX = (int)e.getX();
-                int curY = (int)e.getY();
+                int curX = (int)(e.getX() * w / imgView.getBoundsInLocal().getWidth());
+                int curY = (int)(e.getY() * h / imgView.getBoundsInLocal().getHeight());
 
-                if (curX < 0 || curX >= w() || curY < 0 || curY >= h()) return;
+                if (curX < 0 || curX >= w || curY < 0 || curY >= h) return;
 
                 mNode<int[]> hovered = ds.find(allPixelsDJsets[idx(curY, curX)]);
 
-                imgView.setImage(new WritableImage(reader, w(), h()));
+                imgView.setImage(new WritableImage(reader, w, h));
 
                 blackAndWhiteRecolor();
 
-                for (int row = 0; row < h(); row++)
-                    for (int col = 0; col < w(); col++)
+                for (int row = 0; row < h; row++)
+                    for (int col = 0; col < w; col++)
                         if (ds.find(allPixelsDJsets[idx(row, col)]) == hovered) pw.setColor(col, row, Color.RED);
 
                 imgView.setImage(writableImage);
@@ -284,83 +466,59 @@ public class ViewController {
         blackWhiteColorMode = false;
 
         HashMap<mNode<int[]>, Color> map = new HashMap<>();
-        for(mNode<int[]> n : roots.keySet())
+        for (mNode<int[]> n : roots.keySet())
             map.put(n, Color.color(Math.random(), Math.random(), Math.random()));
 
+        for (int row = 0; row < h; row++)
+            for (int col = 0; col < w; col++)
+                pw.setColor(col, row, map.getOrDefault(ds.find(allPixelsDJsets[idx(row, col)]), Color.BLACK));
 
-        recolorPixels(map);
+        imgView.setImage(writableImage);
     }
 
     private void TSP(int x, int y) {
-        PixelWriter pw = writableImage.getPixelWriter();
+        LinkedList<int[]> order = ImageProcessor.tspOrder(closestCenter(x,y)[0], closestCenter(x,y)[1], centerPoints).reversed();
+        Timeline tl = new Timeline();
         int curX = x, curY = y;
-        for (int[] next : ImageProcessor.tspOrder(x, y, centerPoints)) {
-            ImageProcessor.animateTSP(pw, curX, curY, next[0], next[1], Color.RED);
-            curX = next[0]; curY = next[1];
-        }
-        imgView.setImage(writableImage);
-    }
-//-----------------------------------------------------------------------------------------------------------------------
-    public static int w()               { return (int) image.getWidth(); }
-    public static  int h()               { return (int) image.getHeight(); }
-    private int idx(int r, int c) { return r * w() + c; }
-//-----------------------------------------------------------------------------------------------------------------------
 
-    private void hoverMethod(){
-        if(!blackWhiteColorMode && !randomColorMode){
-            imgViewPane.setOnMouseMoved(e ->{
-                if(roots.keySet().contains(ds.find(allPixelsDJsets[idx((int)e.getY(), (int)e.getX())]))){
-                    imgViewPane.getChildren().add(new Label(Integer.toString(roots.get(ds.find(allPixelsDJsets[idx((int)e.getY(), (int)e.getX())])))));
-                    pw.setColor((int)e.getX(), (int)e.getY(), Color.LIGHTGREEN);
-                    System.out.println("testing juicer");
-                }
-            });
+        for (int i = 0; i < order.size(); i++) {
+            int fx = curX, fy = curY;
+            int tx = order.get(i)[0], ty = order.get(i)[1];
+            tl.getKeyFrames().add(new KeyFrame(Duration.millis(i * 10000.0 / order.size()), e -> {
+                ImageProcessor.animateTSP(pw, fx, fy, tx, ty, Color.RED);
+                imgView.setImage(writableImage);
+            }));
+            curX = tx; curY = ty;
         }
+        tl.play();
     }
 
-    private void fillandRemoveOutliers(int a, int b){
-        int countWithinRadii = 0;
-        mNode<int[]> largestRoot = new mNode<>(new int[2]);
-        for(mNode<int[]> n : allPixelsDJsets){
-            if(roots.get(ds.find(n)) < a) n.setParent(n);
+    //------------------------------------------------------------------------------------------------------------------ UTIL METHODS
 
+    private boolean hueInRange(Color c) {
+        if (c.getSaturation() < 0.01 || c.getBrightness() < 0.01) return false;
+        return c.getHue() >= hueMin && c.getHue() <= hueMax;
+    }
 
-            for(int i = 0; i < b; i++){
-                for(int j = 0; j < b; j++){
+    private int idx(int r, int c) { return r * w + c; }
 
-                    if(ds.find(allPixelsDJsets[idx(n.getData()[0]+ i, n.getData()[1]+j)]) != allPixelsDJsets[idx(n.getData()[0]+ i, n.getData()[1])+j]){
-                        if(ds.find(allPixelsDJsets[idx(n.getData()[0]+ i, n.getData()[1]+j)]).getRank() > largestRoot.getRank())
-                            largestRoot = ds.find(allPixelsDJsets[idx(n.getData()[0]+ i, n.getData()[1]+j)]);
-                        countWithinRadii++;
-                    }
-                    if(ds.find(allPixelsDJsets[idx(n.getData()[0]- i, n.getData()[1]-j)]) != allPixelsDJsets[idx(n.getData()[0]- i, n.getData()[1])-j]){
-                        if(ds.find(allPixelsDJsets[idx(n.getData()[0]- i, n.getData()[1]-j)]).getRank() > largestRoot.getRank())
-                            largestRoot = ds.find(allPixelsDJsets[idx(n.getData()[0]- i, n.getData()[1]-j)]);
-                        countWithinRadii++;
-                    }
-                    if(ds.find(allPixelsDJsets[idx(n.getData()[0]+i, n.getData()[1]-j)]) != allPixelsDJsets[idx(n.getData()[0]+ i, n.getData()[1])-j]){
-                        if(ds.find(allPixelsDJsets[idx(n.getData()[0]+ i, n.getData()[1]-j)]).getRank() > largestRoot.getRank())
-                            largestRoot = ds.find(allPixelsDJsets[idx(n.getData()[0]+ i, n.getData()[1]-j)]);
-                        countWithinRadii++;
-                    }
-                    if(ds.find(allPixelsDJsets[idx(n.getData()[0]- i, n.getData()[1]+j)]) != allPixelsDJsets[idx(n.getData()[0]- i, n.getData()[1])+j]){
-                        if(ds.find(allPixelsDJsets[idx(n.getData()[0]- i, n.getData()[1]+j)]).getRank() > largestRoot.getRank())
-                            largestRoot = ds.find(allPixelsDJsets[idx(n.getData()[0]- i, n.getData()[1]+j)]);
-                        countWithinRadii++;;
-                    }
-                }
-            }
+    private boolean inBounds(int r, int c) { return r >= 0 && r < h && c >= 0 && c < w; }
 
-            if(countWithinRadii > (b / 2)){
-                for(int i = 0; i < b; i++){
-                    for(int j = 0; j < b; j++){
-                        ds.union(allPixelsDJsets[idx(n.getData()[0]- i, n.getData()[1])-j], largestRoot);
-                        ds.union(allPixelsDJsets[idx(n.getData()[0]- i, n.getData()[1])-j], largestRoot);
-                        ds.union(allPixelsDJsets[idx(n.getData()[0]- i, n.getData()[1])-j], largestRoot);
-                        ds.union(allPixelsDJsets[idx(n.getData()[0]- i, n.getData()[1])-j], largestRoot);
-                    }
-                }
+    private int[] closestCenter(int x, int y) {
+        int[] closest = null;
+        double dist = Double.MAX_VALUE;
+
+        for (int[] center : centerPoints) {
+            if (center == null) continue;
+            double d = Math.pow(center[0] - x, 2) + Math.pow(center[1] - y, 2);
+            if (d < dist) {
+                dist = d;
+                closest = center;
             }
         }
+        return closest;
     }
+
+    //------------------------------------------------------------------------------------------------------------------ THE END
+
 }

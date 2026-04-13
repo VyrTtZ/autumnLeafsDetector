@@ -3,70 +3,41 @@
 <?import javafx.scene.canvas.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.geometry.Insets?>
 
 <AnchorPane xmlns="http://javafx.com/javafx/17.0.2-ea"
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="org.example.autumnleavesdetector.ViewController"
-            style="-fx-background-color: #1e1e2e;">
+            style="-fx-background-color: #F8F7F2;">
    <children>
       <VBox AnchorPane.topAnchor="0" AnchorPane.bottomAnchor="0"
             AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0">
-
-         <!-- Nav Bar — widths set by controller to MainApp.width/3 each -->
-         <HBox fx:id="navBar" spacing="2" alignment="CENTER_LEFT"
-               style="-fx-background-color: #2a2a3e;">
-
-            <Pane fx:id="scanOption" style="-fx-cursor: hand;">
-               <children>
-                  <Label text="Scan" prefWidth="500" prefHeight="200"
-                         alignment="CENTER"
-                         style="-fx-text-fill: #cdd6f4; -fx-font-size: 14;
-                                -fx-font-weight: bold;"/>
-               </children>
-            </Pane>
-
-            <Pane fx:id="colorModeOption" style="-fx-cursor: hand;">
-               <children>
-                  <Label text="Color Modes" prefWidth="500" prefHeight="200"
-                         alignment="CENTER"
-                         style="-fx-text-fill: #cdd6f4; -fx-font-size: 14;
-                                -fx-font-weight: bold;"/>
-               </children>
-            </Pane>
-
-            <Pane fx:id="pathOption" style="-fx-cursor: hand;">
-               <children>
-                  <Label text="Pathfinding" prefWidth="500" prefHeight="200"
-                         alignment="CENTER"
-                         style="-fx-text-fill: #cdd6f4; -fx-font-size: 14;
-                                -fx-font-weight: bold;"/>
-               </children>
-            </Pane>
-
+         <HBox minHeight="44" prefHeight="44"
+               style="-fx-border-color: #E0DED6; -fx-border-width: 0 0 1 0; -fx-background-color: #F8F7F2;">
+            <StackPane fx:id="scanOption" HBox.hgrow="ALWAYS"
+                       style="-fx-cursor: HAND;">
+               <Label text="Scan" style="-fx-font-size: 13px;"/>
+            </StackPane>
+            <StackPane fx:id="colorModeOption" HBox.hgrow="ALWAYS"
+                       style="-fx-cursor: HAND;">
+               <Label text="Color Modes" style="-fx-font-size: 13px;"/>
+            </StackPane>
+            <StackPane fx:id="pathOption" HBox.hgrow="ALWAYS"
+                       style="-fx-cursor: HAND;">
+               <Label text="Pathfinding" style="-fx-font-size: 13px;"/>
+            </StackPane>
          </HBox>
-         <HBox VBox.vgrow="ALWAYS" spacing="16"
-               style="-fx-padding: 16; -fx-background-color: #1e1e2e;">
+
+         <HBox VBox.vgrow="ALWAYS">
             <Pane fx:id="imgViewPane" HBox.hgrow="ALWAYS"
-                  style="-fx-background-color: #2a2a3e;
-                         -fx-background-radius: 10;
-                         -fx-border-color: #45475a;
-                         -fx-border-radius: 10;
-                         -fx-border-width: 1;"/>
-            <VBox fx:id="optionsBox" prefWidth="420"
-                  style="-fx-background-color: #2a2a3e;
-                         -fx-background-radius: 10;
-                         -fx-border-color: #45475a;
-                         -fx-border-radius: 10;
-                         -fx-border-width: 1;
-                         -fx-padding: 16;">
+                  style="-fx-background-color: #EFEDE6;"/>
+            <VBox fx:id="optionsBox"
+                  style="-fx-border-color: #E0DED6; -fx-border-width: 0 0 0 1; -fx-background-color: #F8F7F2;">
                <children>
-                  <Canvas fx:id="canvasColorFinder"
-                          height="400.0" width="388"/>
+                  <Canvas fx:id="canvasColorFinder" height="400.0" width="388"/>
                </children>
             </VBox>
-
          </HBox>
+
       </VBox>
    </children>
 </AnchorPane>

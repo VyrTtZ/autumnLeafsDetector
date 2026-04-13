@@ -64,10 +64,4 @@ public class BenchmarkClass {
             ds.union(nodes[i], nodes[(int)(Math.random() * SIZE)]);
         bh.consume(nodes);
     }
-
-    @Benchmark
-    public void orphanage(Blackhole bh) {
-        mNode<Integer> root = ds.find(nodes[0]);
-        bh.consume(ds.orphanage(root, nodes));
-    }
 }
