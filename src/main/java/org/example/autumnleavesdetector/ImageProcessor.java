@@ -53,6 +53,10 @@ public class ImageProcessor {
         int err = dx - dy;
         while (true) {
             pw.setColor(x0, y0, color);
+            pw.setColor(x0-1, y0, color);
+            pw.setColor(x0+1, y0, color);
+            pw.setColor(x0, y0-1, color);
+            pw.setColor(x0, y0+1, color);
             if (x0 == x1 && y0 == y1) break;
             int e2 = 2 * err;
             if (e2 > -dy) { err -= dy; x0 += sx; }

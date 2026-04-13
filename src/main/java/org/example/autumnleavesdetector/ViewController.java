@@ -340,20 +340,25 @@ public class ViewController {
     //------------------------------------------------------------------------------------------------------------------ RESULT MANAGEMENT
 
     private void fill(int dist) {
-        for (int pass = 0; pass < dist; pass++) {
-            boolean[][] isCluster = new boolean[h][w];
-            for (int row = 0; row < h; row++)
-                for (int col = 0; col < w; col++)
-                    isCluster[row][col] = roots.containsKey(ds.find(allPixelsDJsets[idx(row, col)]));
-
-            for (int row = 0; row < h; row++)
-                for (int col = 0; col < w; col++) {
-                    if (!isCluster[row][col]) continue;
-                    int[][] nb = {{row-1,col},{row+1,col},{row,col-1},{row,col+1}};
-                    for (int[] n : nb)
-                        if (inBounds(n[0],n[1]) && !isCluster[n[0]][n[1]])
-                            ds.union(allPixelsDJsets[idx(row,col)], allPixelsDJsets[idx(n[0],n[1])]);
+        int counter = 0;
+        double angle = 0;
+        int coordX = 0;
+        int coordY = 0;
+        for(mNode<int[]> n : roots.keySet()){
+            coordX = n.getData()[0];
+            coordY = n.getData()[1];
+            for(int i = 1; i < 361; i++){
+                angle = (2*Math.PI)/i;
+                for(int j = 0; j < dist; j++){
+                    double dx = coordX + (dist*Math.cos(angle));
+                    double dy = coordY + (dist*Math.sin(angle));
+                    if(inBounds((int)dx, (int)dy))
+                        if(ds.find(allPixelsDJsets[idx((int)dy, (int)dx)]) != allPixelsDJsets[idx((int)dy, (int)dx)]) {
+                            System.out.println("Grandpa: " + i++);
+                            break;
+                        }
                 }
+            }
         }
     }
 
@@ -484,7 +489,7 @@ public class ViewController {
         for (int i = 0; i < order.size(); i++) {
             int fx = curX, fy = curY;
             int tx = order.get(i)[0], ty = order.get(i)[1];
-            tl.getKeyFrames().add(new KeyFrame(Duration.millis(i * 10000.0 / order.size()), e -> {
+            tl.getKeyFrames().add(new KeyFrame(Duration.millis(i * 30000.0 / order.size()), e -> {
                 ImageProcessor.animateTSP(pw, fx, fy, tx, ty, Color.RED);
                 imgView.setImage(writableImage);
             }));
