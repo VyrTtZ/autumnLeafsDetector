@@ -14,16 +14,19 @@
          <HBox minHeight="44" prefHeight="44"
                style="-fx-border-color: #E0DED6; -fx-border-width: 0 0 1 0; -fx-background-color: #F8F7F2;">
             <StackPane fx:id="scanOption" HBox.hgrow="ALWAYS"
-                       style="-fx-cursor: HAND;">
-               <Label text="Scan" style="-fx-font-size: 13px;"/>
+                       minHeight="44" minWidth="80"
+                       style="-fx-cursor: HAND; -fx-background-color: transparent;">
+               <Label text="Scan" mouseTransparent="true" style="-fx-font-size: 13px;"/>
             </StackPane>
             <StackPane fx:id="colorModeOption" HBox.hgrow="ALWAYS"
-                       style="-fx-cursor: HAND;">
-               <Label text="Color Modes" style="-fx-font-size: 13px;"/>
+                       minHeight="44" minWidth="80"
+                       style="-fx-cursor: HAND; -fx-background-color: transparent;">
+               <Label text="Color Modes" mouseTransparent="true" style="-fx-font-size: 13px;"/>
             </StackPane>
             <StackPane fx:id="pathOption" HBox.hgrow="ALWAYS"
-                       style="-fx-cursor: HAND;">
-               <Label text="Pathfinding" style="-fx-font-size: 13px;"/>
+                       minHeight="44" minWidth="80"
+                       style="-fx-cursor: HAND; -fx-background-color: transparent;">
+               <Label text="Pathfinding" mouseTransparent="true" style="-fx-font-size: 13px;"/>
             </StackPane>
          </HBox>
 

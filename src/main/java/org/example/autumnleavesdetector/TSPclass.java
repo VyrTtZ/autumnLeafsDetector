@@ -8,7 +8,8 @@ public class TSPclass {
     public static LinkedList<int[]> tspOrder(int startX, int startY, int[][] centerPoints) {
         LinkedList<int[]> temp = new LinkedList<>();
         for(int[] i : centerPoints){
-            temp.add(i);
+            if(i[0] != startX && i[1] != startY)
+                temp.add(i);
         }
 
         LinkedList<int[]> order = new LinkedList<>();
@@ -28,7 +29,7 @@ public class TSPclass {
                 }
             }
 
-            order.addFirst(closest);
+            order.add(closest);
 
             curX = closest[0];
             curY = closest[1];

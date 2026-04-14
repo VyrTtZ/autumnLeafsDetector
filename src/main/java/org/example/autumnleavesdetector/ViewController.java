@@ -4,13 +4,11 @@ import MDisjointSet.DisjointSet;
 import MDisjointSet.mNode;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.control.ContextMenu;
-import javafx.scene.control.Label;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.Slider;
+import javafx.scene.control.*;
 import javafx.scene.image.*;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
@@ -99,6 +97,8 @@ public class ViewController {
         scanOption.setOnMousePressed(_      -> openScanOptions());
         colorModeOption.setOnMousePressed(_ -> openColorOptions());
         pathOption.setOnMousePressed(_      -> openPathOptions());
+
+        Platform.runLater(() -> scanOption.getScene().getRoot().layout());
     }
 
     //------------------------------------------------------------------------------------------------------------------ PROJECT MANAGEMENT OPTIONS
@@ -180,10 +180,22 @@ public class ViewController {
 
     private void openPathOptions() {
         imgViewPane.setOnMouseClicked(e -> {
-            int currX = (int)(e.getX() * w / imgView.getBoundsInLocal().getWidth());
-            int currY = (int)(e.getY() * h / imgView.getBoundsInLocal().getHeight());
 
-            TSP(currX, currY);
+            if(!blackWhiteColorMode) {
+                int currX = (int) (e.getX() * w / imgView.getBoundsInLocal().getWidth());
+                int currY = (int) (e.getY() * h / imgView.getBoundsInLocal().getHeight());
+
+                TSP(currX, currY);
+            }else{
+//                Alert a = new Alert(Alert.AlertType.INFORMATION);
+//                DialogPane dp = new DialogPane();
+//                dp.contentProperty().set(new Label("This is not usable in black/white mode"));
+//                a.setDialogPane(dp);
+//                a.show();
+//
+//                openScanOptions();
+//                blackWhiteColorMode = !blackWhiteColorMode;
+            }
         });
     }
 
