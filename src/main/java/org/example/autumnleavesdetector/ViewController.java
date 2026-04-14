@@ -370,6 +370,8 @@ public class ViewController {
                 for (int j = 1; j < dist; j++) {
                     int dx = (int)(coordX + j * Math.cos(angle));
                     int dy = (int)(coordY + j * Math.sin(angle));
+                    System.out.println(idx(dx, dy));
+                    System.out.println(allPixelsDJsets.length);
                     if (!inBounds(dx, dy)) break;
 
                     mNode<int[]> p = allPixelsDJsets[idx(dy, dx)];
