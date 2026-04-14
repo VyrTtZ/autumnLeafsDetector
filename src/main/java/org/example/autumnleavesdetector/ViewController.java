@@ -25,7 +25,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 
 public class ViewController {
@@ -148,8 +147,8 @@ public class ViewController {
         randomColorsOption.setStyle("-fx-background-color: linear-gradient(to right, red, green, blue, purple); -fx-background-radius: 6;");
 
 
-        Slider sliderGaps   = new Slider(0, 30, 0);
-        Slider sliderFilter = new Slider(0, 30, 0);
+        Slider sliderGaps   = new Slider(0, 70, 0);
+        Slider sliderFilter = new Slider(0, 70, 0);
 
 
         greyscaleOption.setOnMouseClicked(_    -> blackAndWhiteRecolor());
@@ -180,7 +179,12 @@ public class ViewController {
     }
 
     private void openPathOptions() {
-        imgViewPane.setOnMouseClicked(e -> TSP((int) e.getX(), (int) e.getY()));
+        imgViewPane.setOnMouseClicked(e -> {
+            int currX = (int)(e.getX() * w / imgView.getBoundsInLocal().getWidth());
+            int currY = (int)(e.getY() * h / imgView.getBoundsInLocal().getHeight());
+
+            TSP(currX, currY);
+        });
     }
 
     //------------------------------------------------------------------------------------------------------------------ LASSO METHODS
@@ -196,6 +200,7 @@ public class ViewController {
         } else {
             gc.clearRect(0, 0, canvasColorFinder.getWidth(), canvasColorFinder.getHeight());
             gc.drawImage(imgColorPicker, 0, 0, canvasColorFinder.getWidth(), canvasColorFinder.getHeight());
+            resetAndRedraw();
             lassoX = lassoY = 0;
         }
     }
@@ -283,7 +288,8 @@ public class ViewController {
             for (int col = 0; col < w; col++)
                 if (hueInRange(reader.getColor(col, row))) {
                     mNode<int[]> root = ds.find(allPixelsDJsets[idx(row, col)]);
-                    roots.put(root, roots.getOrDefault(root, 0) + 1);
+                    if (roots.containsKey(root)) roots.put(root, roots.get(root) + 1);
+                    else roots.put(root, 1);
                 }
     }
 
@@ -298,7 +304,7 @@ public class ViewController {
                 if (!roots.containsKey(root)) continue;
 
                 if (!bounds.containsKey(root))
-                    bounds.put(root, new int[]{j, i, j, i});
+                    bounds.put(root, new int[]{j, i, j, i}); //x1, y1, x2, y2
                 else {
                     int[] b = bounds.get(root);
                     if (j < b[0]) b[0] = j;
@@ -314,16 +320,16 @@ public class ViewController {
         boxes.clear();
 
         for (int[] b : bounds.values())
-            if (b[2] - b[0] >= terminateInt && b[3] - b[1] >= terminateInt) boxes.add(b);
+            boxes.add(b); //adds the 2 corners
 
         centerPoints = new int[roots.size()][2];
         for (int i = 0; i < boxes.size(); i++) {
             int[] b = boxes.get(i);
-            centerPoints[i] = new int[]{(b[0] + b[2]) / 2, (b[1] + b[3]) / 2};
+            centerPoints[i] = new int[]{(b[0] + b[2]) / 2, (b[1] + b[3]) / 2}; //finds center points
         }
     }
 
-    private void orderClusters() {
+    private void orderClusters() { //sets up roots with placement
         LinkedList<mNode<int[]>> temp = new LinkedList<>(roots.keySet());
         for (int x = 1; x < temp.size(); x++) {
             mNode<int[]> n = temp.get(x);
@@ -340,23 +346,46 @@ public class ViewController {
     //------------------------------------------------------------------------------------------------------------------ RESULT MANAGEMENT
 
     private void fill(int dist) {
-        int counter = 0;
-        double angle = 0;
-        int coordX = 0;
-        int coordY = 0;
-        for(mNode<int[]> n : roots.keySet()){
-            coordX = n.getData()[0];
-            coordY = n.getData()[1];
-            for(int i = 1; i < 361; i++){
-                angle = (2*Math.PI)/i;
-                for(int j = 0; j < dist; j++){
-                    double dx = coordX + (dist*Math.cos(angle));
-                    double dy = coordY + (dist*Math.sin(angle));
-                    if(inBounds((int)dx, (int)dy))
-                        if(ds.find(allPixelsDJsets[idx((int)dy, (int)dx)]) != allPixelsDJsets[idx((int)dy, (int)dx)]) {
-                            System.out.println("Grandpa: " + i++);
-                            break;
+        for (mNode<int[]> n : roots.keySet()) {
+            int coordX = n.getData()[0];
+            int coordY = n.getData()[1];
+
+            for (int i = 1; i < 361; i++) {
+                double angle = (2 * Math.PI * i) / 360.0;
+                boolean exited = false;
+                int exitJ = -1;
+
+                for (int j = 1; j < dist; j++) {
+                    int dx = (int)(coordX + j * Math.cos(angle));
+                    int dy = (int)(coordY + j * Math.sin(angle));
+                    if (!inBounds(dx, dy)) break;
+
+                    mNode<int[]> p = allPixelsDJsets[idx(dy, dx)];
+                    if (ds.find(p) != n) {
+                        exited = true;
+                        exitJ = j;
+                        break;
+                    }
+                }
+
+                if (!exited) continue;
+
+                for (int j = exitJ; j < dist; j++) {
+                    int dx = (int)(coordX + j * Math.cos(angle));
+                    int dy = (int)(coordY + j * Math.sin(angle));
+                    if (!inBounds(dx, dy)) break;
+
+                    mNode<int[]> p = allPixelsDJsets[idx(dy, dx)];
+                    boolean notRoot = ds.find(p) != p;
+
+                    if (notRoot) {
+                        for (int k = exitJ; k < j; k++) {
+                            int dx2 = (int)(coordX + k * Math.cos(angle));
+                            int dy2 = (int)(coordY + k * Math.sin(angle));
+                            ds.union(allPixelsDJsets[idx(dy2, dx2)], n);
                         }
+                        break;
+                    }
                 }
             }
         }
@@ -368,9 +397,9 @@ public class ViewController {
             if (roots.get(n) < b) toRemove.add(n);
         for (mNode<int[]> n : toRemove) roots.remove(n);
 
-        for (mNode<int[]> pixel : allPixelsDJsets)
-            if (!roots.containsKey(ds.find(pixel)))
-                pixel.setParent(pixel);
+        for (mNode<int[]> m : allPixelsDJsets)
+            if (!roots.containsKey(ds.find(m)))
+                ds.union(m, m);
     }
 
     //------------------------------------------------------------------------------------------------------------------ DRAWING METHODS
@@ -416,8 +445,7 @@ public class ViewController {
         bounds.clear();
         setupRoots();
         System.out.println(roots.size());
-        smallOnesRemoval(20);
-        System.out.println(roots.size() + "---");
+        smallOnesRemoval(terminateInt == 0 ? 20 : terminateInt);
         orderClusters();
         setupBounds();
         manageBoxes();
@@ -482,15 +510,15 @@ public class ViewController {
     }
 
     private void TSP(int x, int y) {
-        LinkedList<int[]> order = ImageProcessor.tspOrder(closestCenter(x,y)[0], closestCenter(x,y)[1], centerPoints).reversed();
+        LinkedList<int[]> order = TSPclass.tspOrder(closestCenter(x,y)[0], closestCenter(x,y)[1], centerPoints);
         Timeline tl = new Timeline();
         int curX = x, curY = y;
 
         for (int i = 0; i < order.size(); i++) {
             int fx = curX, fy = curY;
             int tx = order.get(i)[0], ty = order.get(i)[1];
-            tl.getKeyFrames().add(new KeyFrame(Duration.millis(i * 30000.0 / order.size()), e -> {
-                ImageProcessor.animateTSP(pw, fx, fy, tx, ty, Color.RED);
+            tl.getKeyFrames().add(new KeyFrame(Duration.millis(i * 3000.0 / order.size()), e -> {
+                TSPclass.animateTSP(pw, fx, fy, tx, ty, Color.RED);
                 imgView.setImage(writableImage);
             }));
             curX = tx; curY = ty;

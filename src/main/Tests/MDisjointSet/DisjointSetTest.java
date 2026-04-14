@@ -59,9 +59,4 @@ class DisjointSetTest {
         assertSame(rootBefore, testDJSet.find(a));
     }
 
-    @Test
-    void unionSameRank() {
-        testDJSet.union(a, b);
-        assertEquals(1, testDJSet.find(a).getRank());
-    }
 }

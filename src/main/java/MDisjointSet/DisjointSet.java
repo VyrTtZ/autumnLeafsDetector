@@ -19,13 +19,6 @@ public class DisjointSet<T> {
 
         if (root1 == root2) return;
 
-        if (root1.getRank() < root2.getRank()) {
-            root1.setParent(root2);
-        } else if (root1.getRank() > root2.getRank()) {
-            root2.setParent(root1);
-        } else {
-            root2.setParent(root1);
-            root1.setRank(root1.getRank() + 1);
-        }
+        root1.setParent(root2);
     }
 }

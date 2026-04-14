@@ -7,7 +7,7 @@ import java.util.LinkedList;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class ImageProcessorTest {
+class TSPclassTest {
 
     int[][] points;
 
@@ -23,7 +23,7 @@ class ImageProcessorTest {
 
     @Test
     void tspOrder() {
-        LinkedList<int[]> result = ImageProcessor.tspOrder(0, 0, points);
+        LinkedList<int[]> result = TSPclass.tspOrder(0, 0, points);
         assertEquals(3, result.size());
     }
 }

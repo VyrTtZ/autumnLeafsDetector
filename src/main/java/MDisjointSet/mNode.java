@@ -3,12 +3,10 @@ package MDisjointSet;
 public class mNode<T> {
     T data;
     mNode<T> parent;
-    int rank;
     //----------------------------------------------------------------------------------------------------------------------
     public mNode(T data) {
         this.data = data;
         this.parent = this;
-        this.rank = 0;
     }
 
     public T getData() {
@@ -21,15 +19,7 @@ public class mNode<T> {
 
     public void setParent(mNode<T> parent) {
         this.parent = parent;
-    }
-
-    public int getRank() {
-        return rank;
-    }
-
-    public void setRank(int rank) {
-        this.rank = rank;
-    }
+    }}
 
     //----------------------------------------------------------------------------------------------------------------------
-}
+

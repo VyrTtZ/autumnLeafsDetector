@@ -3,7 +3,7 @@ import javafx.scene.image.PixelWriter;
 import javafx.scene.paint.Color;
 import java.util.LinkedList;
 
-public class ImageProcessor {
+public class TSPclass {
 //-----------------------------------------------------------------------------------------------------------------------
     public static LinkedList<int[]> tspOrder(int startX, int startY, int[][] centerPoints) {
         LinkedList<int[]> temp = new LinkedList<>();
@@ -19,7 +19,6 @@ public class ImageProcessor {
         while (!temp.isEmpty()) {
             int[] closest = null;
             double closestDist = Double.MAX_VALUE;
-            System.out.println(temp.size());
 
             for (int[] point : temp) {
                 double dist = Math.pow(point[0] - curX, 2) + Math.pow(point[1] - curY, 2);

@@ -10,9 +10,8 @@ import java.util.concurrent.TimeUnit;
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
 @State(Scope.Thread)
 @Fork(1)
-@Warmup(iterations = 0)
-@Measurement(iterations = 1)
-
+@Warmup(iterations = 2)
+@Measurement(iterations = 5)
 public class BenchmarkClass {
 
     public static void main(String[] args) throws Exception {
@@ -29,39 +28,21 @@ public class BenchmarkClass {
         nodes = new mNode[SIZE];
         for (int i = 0; i < SIZE; i++)
             nodes[i] = ds.makeSet(i);
-    }
-
-    @TearDown
-    public void tearDown() {
-        ds = null;
-        nodes = null;
+        for (int i = 0; i < SIZE - 1; i++)
+            ds.union(nodes[i], nodes[i + 1]);
     }
 
     @Benchmark
-    public void findFlat(Blackhole bh) {
+    public void benchFind(Blackhole bh) {
         for (mNode<Integer> n : nodes)
             bh.consume(ds.find(n));
     }
 
     @Benchmark
-    public void findAfterUnions(Blackhole bh) {
-        for (int i = 0; i < SIZE - 1; i++)
+    public void benchUnion(Blackhole bh) {
+        for (int i = 0; i < SIZE - 1; i++) {
             ds.union(nodes[i], nodes[i + 1]);
-        for (mNode<Integer> n : nodes)
-            bh.consume(ds.find(n));
-    }
-
-    @Benchmark
-    public void unionSequential(Blackhole bh) {
-        for (int i = 0; i < SIZE - 1; i++)
-            ds.union(nodes[i], nodes[i + 1]);
-        bh.consume(nodes);
-    }
-
-    @Benchmark
-    public void unionRandom(Blackhole bh) {
-        for (int i = 0; i < SIZE; i++)
-            ds.union(nodes[i], nodes[(int)(Math.random() * SIZE)]);
-        bh.consume(nodes);
+            bh.consume(nodes[i]);
+        }
     }
 }
